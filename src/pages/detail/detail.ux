@@ -32,6 +32,7 @@ export default {
   },
 
   onInit() {
+    console.log("[InfoPlat] detail onInit, params: " + JSON.stringify(this.$page.params))
     if (this.$page && this.$page.params) {
       this.title = this.$page.params.title || this.title
       this.description = this.$page.params.description || this.description
@@ -53,12 +54,19 @@ export default {
       url: this.url,
       method: "GET",
       success: (res) => {
+        console.log("[InfoPlat] fetch success, data length: " + (res.data ? res.data.length : 0))
         if (res.data) {
+          // Log a snippet of raw data
+          console.log("[InfoPlat] raw data snippet: " + res.data.substring(0, 200))
           this.fullContent = this.parseHTML(res.data)
+          console.log("[InfoPlat] final processed content length: " + this.fullContent.length)
+        } else {
+          console.log("[InfoPlat] fetch success but NO DATA")
         }
         this.loading = false
       },
-      fail: () => {
+      fail: (data, code) => {
+        console.log("[InfoPlat] fetch failed, code: " + code + " data: " + data)
         this.loading = false
       }
     })
@@ -70,6 +78,7 @@ export default {
     // 1. Pre-cleanup: remove scripts and styles
     let content = html.replace(/<script[^>]*>([\s\S]*?)<\/script>/gi, "")
     content = content.replace(/<style[^>]*>([\s\S]*?)<\/style>/gi, "")
+    console.log("[InfoPlat] after cleanup length: " + content.length)
 
     // 2. Try to find main content block
     let mainMatch = content.match(/<article[^>]*>([\s\S]*?)<\/article>/i) ||
@@ -77,7 +86,10 @@ export default {
                     content.match(/<div[^>]*class=["'][^"']*(?:content|article|post|entry)[^"']*["'][^>]*>([\s\S]*?)<\/div>/i)
 
     if (mainMatch) {
+      console.log("[InfoPlat] found main content via regex")
       content = mainMatch[1]
+    } else {
+      console.log("[InfoPlat] NO main content found, using full body or content")
     }
 
     // 3. Strip remaining HTML tags more safely
@@ -95,7 +107,9 @@ export default {
     let filteredLines = lines.map(l => l.trim())
                              .filter(l => l.length > 0 && l.indexOf("⬅️") === -1)
     
-    return filteredLines.join("\n\n")
+    let result = filteredLines.join("\n\n")
+    console.log("[InfoPlat] parseHTML final output snippet: " + result.substring(0, 100))
+    return result
   },
 
   goBack() {
