@@ -1,0 +1,106 @@
+<template>
+  <div class="page">
+    <div class="topbar">
+      <input class="back-btn" type="button" value="返回" onclick="goBack" />
+      <text class="source">{{ source }}</text>
+    </div>
+    <div class="article">
+      <text class="title">{{ title }}</text>
+      <text class="desc">{{ description }}</text>
+      <text class="url">{{ url }}</text>
+    </div>
+  </div>
+</template>
+
+<script>
+import router from "@system.router"
+
+export default {
+  private: {
+    title: "新闻详情",
+    description: "暂无摘要",
+    source: "InfoPlat",
+    url: ""
+  },
+
+  onInit() {
+    if (this.$page && this.$page.params) {
+      this.title = this.$page.params.title || this.title
+      this.description = this.$page.params.description || this.description
+      this.source = this.$page.params.source || this.source
+      this.url = this.$page.params.url || this.url
+    }
+  },
+
+  goBack() {
+    router.back()
+  }
+}
+</script>
+
+<style>
+.page {
+  width: 800px;
+  height: 600px;
+  flex-direction: column;
+  background-color: #f4f7f8;
+}
+
+.topbar {
+  height: 86px;
+  padding-left: 28px;
+  padding-right: 28px;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #ffffff;
+}
+
+.back-btn {
+  width: 90px;
+  height: 42px;
+  border-radius: 6px;
+  background-color: #e4f0ef;
+  color: #1f6164;
+  font-size: 20px;
+}
+
+.source {
+  width: 520px;
+  font-size: 20px;
+  color: #607178;
+  text-align: right;
+  text-overflow: ellipsis;
+}
+
+.article {
+  height: 514px;
+  padding: 36px 48px;
+  flex-direction: column;
+}
+
+.title {
+  font-size: 36px;
+  font-weight: bold;
+  color: #172026;
+  lines: 3;
+  text-overflow: ellipsis;
+}
+
+.desc {
+  margin-top: 28px;
+  font-size: 24px;
+  line-height: 34px;
+  color: #43565d;
+  lines: 7;
+  text-overflow: ellipsis;
+}
+
+.url {
+  margin-top: 28px;
+  font-size: 18px;
+  color: #2f6f73;
+  lines: 2;
+  text-overflow: ellipsis;
+}
+</style>
