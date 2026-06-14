@@ -596,7 +596,7 @@ text {
 
 .news-item {
   width: 257px;
-  height: 90px;
+  height: 100px;
   margin-bottom: 14px;
   padding: 12px;
   border-radius: 8px;
