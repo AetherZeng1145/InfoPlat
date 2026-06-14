@@ -37,7 +37,9 @@ export default {
       this.description = this.$page.params.description || this.description
       this.source = this.$page.params.source || this.source
       this.url = this.$page.params.url || this.url
-      this.isDark = this.$page.params.isDark === "true" || this.$page.params.isDark === true
+      // Handle potential string boolean from params
+      const isDarkParam = this.$page.params.isDark
+      this.isDark = isDarkParam === true || isDarkParam === "true"
     }
     if (this.url) {
       this.fetchFullContent()
@@ -78,17 +80,17 @@ export default {
       content = mainMatch[1]
     }
 
-    // 3. Strip remaining HTML tags
-    content = content.replace(/<[^>]*>?/gm, " ")
+    // 3. Strip remaining HTML tags more safely
+    content = content.replace(/<[^>]+>/g, " ")
     
-    // 4. Decode some entities
+    // 4. Decode common entities
     content = content.replace(/&nbsp;/g, " ")
                      .replace(/&quot;/g, "\"")
                      .replace(/&amp;/g, "&")
                      .replace(/&lt;/g, "<")
                      .replace(/&gt;/g, ">")
 
-    // 5. Filter lines containing ⬅️
+    // 5. Split into lines and filter out lines containing ⬅️
     let lines = content.split(/[\r\n]+/)
     let filteredLines = lines.map(l => l.trim())
                              .filter(l => l.length > 0 && l.indexOf("⬅️") === -1)
@@ -200,9 +202,5 @@ export default {
   margin-top: 28px;
   font-size: 24px;
   line-height: 38px;
-}
-
-.url {
-  display: none;
 }
 </style>

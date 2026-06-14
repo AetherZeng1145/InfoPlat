@@ -546,7 +546,7 @@ text {
 }
 
 .news-panel {
-  height: 490px;
+  height: 480px;
   margin-top: 18px;
   flex-direction: column;
   overflow: scroll;

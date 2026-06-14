@@ -61,11 +61,20 @@ function request(options) {
 
 function stripHtmlAndFilter(text) {
   if (!text) return ""
-  // 1. Remove HTML tags using regex
-  let cleanText = text.replace(/<[^>]*>?/gm, "")
-  // 2. Split into lines and filter out lines containing ⬅️
+  // 1. Remove HTML tags using a more robust regex
+  let cleanText = text.replace(/<[^>]+>/g, " ")
+  
+  // 2. Decode basic HTML entities
+  cleanText = cleanText.replace(/&nbsp;/g, " ")
+                       .replace(/&quot;/g, "\"")
+                       .replace(/&amp;/g, "&")
+                       .replace(/&lt;/g, "<")
+                       .replace(/&gt;/g, ">")
+
+  // 3. Split into lines and filter out lines containing ⬅️
   let lines = cleanText.split(/[\r\n]+/)
   let filteredLines = lines.filter((line) => line.indexOf("⬅️") === -1)
+  
   return filteredLines.join("\n").trim()
 }
 
