@@ -1,26 +1,34 @@
 <template>
-  <div class="page">
-    <div class="topbar">
-      <input class="back-btn" type="button" value="返回" onclick="goBack" />
-      <text class="source">{{ source }}</text>
+  <div class="page {{ isDark ? 'page-dark' : 'page-light' }}">
+    <div class="topbar {{ isDark ? 'topbar-dark' : 'topbar-light' }}">
+      <input class="back-btn {{ isDark ? 'btn-dark' : 'btn-light' }}" type="button" value="返回" onclick="goBack" />
+      <text class="source {{ isDark ? 'text-dark-sub' : 'text-light-sub' }}">{{ source }}</text>
     </div>
     <div class="article">
-      <text class="title">{{ title }}</text>
-      <text class="desc">{{ description }}</text>
-      <text class="url">{{ url }}</text>
+      <text class="title {{ isDark ? 'text-dark' : 'text-light' }}">{{ title }}</text>
+      
+      <div class="loading-box" if="{{ loading }}">
+        <text class="state-text {{ isDark ? 'text-dark-sub' : 'text-light-sub' }}">正在解析全文...</text>
+      </div>
+
+      <text class="desc {{ isDark ? 'text-dark-sub' : 'text-light-sub' }}" if="{{ !loading }}">{{ fullContent || description }}</text>
     </div>
   </div>
 </template>
 
 <script>
 import router from "@system.router"
+import fetch from "@system.fetch"
 
 export default {
   private: {
     title: "新闻详情",
     description: "暂无摘要",
     source: "InfoPlat",
-    url: ""
+    url: "",
+    fullContent: "",
+    loading: false,
+    isDark: false
   },
 
   onInit() {
@@ -29,7 +37,63 @@ export default {
       this.description = this.$page.params.description || this.description
       this.source = this.$page.params.source || this.source
       this.url = this.$page.params.url || this.url
+      this.isDark = this.$page.params.isDark === "true" || this.$page.params.isDark === true
     }
+    if (this.url) {
+      this.fetchFullContent()
+    }
+  },
+
+  fetchFullContent() {
+    this.loading = true
+    console.log("[InfoPlat] fetching full content: " + this.url)
+    fetch.fetch({
+      url: this.url,
+      method: "GET",
+      success: (res) => {
+        if (res.data) {
+          this.fullContent = this.parseHTML(res.data)
+        }
+        this.loading = false
+      },
+      fail: () => {
+        this.loading = false
+      }
+    })
+  },
+
+  parseHTML(html) {
+    if (!html) return ""
+    
+    // 1. Pre-cleanup: remove scripts and styles
+    let content = html.replace(/<script[^>]*>([\s\S]*?)<\/script>/gi, "")
+    content = content.replace(/<style[^>]*>([\s\S]*?)<\/style>/gi, "")
+
+    // 2. Try to find main content block
+    let mainMatch = content.match(/<article[^>]*>([\s\S]*?)<\/article>/i) ||
+                    content.match(/<main[^>]*>([\s\S]*?)<\/main>/i) ||
+                    content.match(/<div[^>]*class=["'][^"']*(?:content|article|post|entry)[^"']*["'][^>]*>([\s\S]*?)<\/div>/i)
+
+    if (mainMatch) {
+      content = mainMatch[1]
+    }
+
+    // 3. Strip remaining HTML tags
+    content = content.replace(/<[^>]*>?/gm, " ")
+    
+    // 4. Decode some entities
+    content = content.replace(/&nbsp;/g, " ")
+                     .replace(/&quot;/g, "\"")
+                     .replace(/&amp;/g, "&")
+                     .replace(/&lt;/g, "<")
+                     .replace(/&gt;/g, ">")
+
+    // 5. Filter lines containing ⬅️
+    let lines = content.split(/[\r\n]+/)
+    let filteredLines = lines.map(l => l.trim())
+                             .filter(l => l.length > 0 && l.indexOf("⬅️") === -1)
+    
+    return filteredLines.join("\n\n")
   },
 
   goBack() {
@@ -43,7 +107,14 @@ export default {
   width: 800px;
   height: 600px;
   flex-direction: column;
+}
+
+.page-light {
   background-color: #f4f7f8;
+}
+
+.page-dark {
+  background-color: #000000;
 }
 
 .topbar {
@@ -53,22 +124,52 @@ export default {
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
+}
+
+.topbar-light {
   background-color: #ffffff;
+}
+
+.topbar-dark {
+  background-color: #171717;
 }
 
 .back-btn {
   width: 90px;
   height: 42px;
   border-radius: 6px;
+  font-size: 20px;
+}
+
+.btn-light {
   background-color: #e4f0ef;
   color: #1f6164;
-  font-size: 20px;
+}
+
+.btn-dark {
+  background-color: #262626;
+  color: #edf4f4;
+}
+
+.text-dark {
+  color: #edf4f4;
+}
+
+.text-light {
+  color: #172026;
+}
+
+.text-dark-sub {
+  color: #aebdc2;
+}
+
+.text-light-sub {
+  color: #607178;
 }
 
 .source {
   width: 520px;
   font-size: 20px;
-  color: #607178;
   text-align: right;
   text-overflow: ellipsis;
 }
@@ -83,21 +184,25 @@ export default {
 .title {
   font-size: 36px;
   font-weight: bold;
-  color: #172026;
+}
+
+.loading-box {
+  margin-top: 50px;
+  justify-content: center;
+  align-items: center;
+}
+
+.state-text {
+  font-size: 24px;
 }
 
 .desc {
   margin-top: 28px;
   font-size: 24px;
-  line-height: 34px;
-  color: #43565d;
+  line-height: 38px;
 }
 
 .url {
-  margin-top: 28px;
-  font-size: 18px;
-  color: #2f6f73;
-  lines: 2;
-  text-overflow: ellipsis;
+  display: none;
 }
 </style>

@@ -187,7 +187,8 @@ export default {
         title: item.title,
         description: item.description,
         source: item.source,
-        url: item.url
+        url: item.url,
+        isDark: this.isDark
       }
     })
   },
