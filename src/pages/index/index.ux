@@ -49,14 +49,14 @@
       </div>
 
       <div class="news-panel" if="{{ showNewsContent }}">
-        <div class="lead-news {{ isDark ? 'card-dark' : 'card-light' }}">
+        <div class="lead-news {{ isDark ? 'card-dark' : 'card-light' }}" onclick="showDetail(leadNews)">
           <text class="lead-tag">{{ leadNews.category }}</text>
           <text class="lead-title {{ isDark ? 'text-dark' : 'text-light' }}">{{ leadNews.title }}</text>
           <text class="lead-desc {{ isDark ? 'text-dark-sub' : 'text-light-sub' }}">{{ leadNews.description }}</text>
           <text class="lead-source {{ isDark ? 'text-dark-sub' : 'text-light-sub' }}">{{ leadNews.source }} {{ leadNews.published }}</text>
         </div>
         <div class="news-grid">
-          <div class="news-item {{ isDark ? 'card-dark' : 'card-light' }}" for="{{ newsList }}">
+          <div class="news-item {{ isDark ? 'card-dark' : 'card-light' }}" for="{{ newsList }}" onclick="showDetail($item)">
             <text class="news-item-title {{ isDark ? 'text-dark' : 'text-light' }}">{{ $item.title }}</text>
             <text class="news-item-source {{ isDark ? 'text-dark-sub' : 'text-light-sub' }}">{{ $item.source }}</text>
           </div>
@@ -85,6 +85,7 @@
 </template>
 
 <script>
+import router from "@system.router"
 import { getLatestNews, getWeather, getExpress } from "../../common/services"
 
 function pad(value) {
@@ -682,11 +683,6 @@ text {
 }
 
 .theme-btn-dark {
-  background-color: #1a2c40;
-  color: #6fb2ff;
-}
-</style>
-ark {
   background-color: #1a2c40;
   color: #6fb2ff;
 }
