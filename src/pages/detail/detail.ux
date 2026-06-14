@@ -32,16 +32,10 @@ export default {
   },
 
   onInit() {
-    console.log("[InfoPlat] detail onInit, params: " + JSON.stringify(this.$page.params))
-    if (this.$page && this.$page.params) {
-      this.title = this.$page.params.title || this.title
-      this.description = this.$page.params.description || this.description
-      this.source = this.$page.params.source || this.source
-      this.url = this.$page.params.url || this.url
-      // Handle potential string boolean from params
-      const isDarkParam = this.$page.params.isDark
-      this.isDark = isDarkParam === true || isDarkParam === "true"
-    }
+    // Force boolean conversion because router params are often strings
+    this.isDark = String(this.isDark) === "true"
+    console.log("[InfoPlat] detail onInit, isDark: " + this.isDark + " url: " + this.url)
+    
     if (this.url) {
       this.fetchFullContent()
     }
@@ -56,8 +50,6 @@ export default {
       success: (res) => {
         console.log("[InfoPlat] fetch success, data length: " + (res.data ? res.data.length : 0))
         if (res.data) {
-          // Log a snippet of raw data
-          console.log("[InfoPlat] raw data snippet: " + res.data.substring(0, 200))
           this.fullContent = this.parseHTML(res.data)
           console.log("[InfoPlat] final processed content length: " + this.fullContent.length)
         } else {
@@ -77,37 +69,56 @@ export default {
     
     // 1. Pre-cleanup: remove scripts and styles
     let content = html.replace(/<script[^>]*>([\s\S]*?)<\/script>/gi, "")
-    content = content.replace(/<style[^>]*>([\s\S]*?)<\/style>/gi, "")
+                      .replace(/<style[^>]*>([\s\S]*?)<\/style>/gi, "")
     console.log("[InfoPlat] after cleanup length: " + content.length)
 
-    // 2. Try to find main content block
-    let mainMatch = content.match(/<article[^>]*>([\s\S]*?)<\/article>/i) ||
-                    content.match(/<main[^>]*>([\s\S]*?)<\/main>/i) ||
-                    content.match(/<div[^>]*class=["'][^"']*(?:content|article|post|entry)[^"']*["'][^>]*>([\s\S]*?)<\/div>/i)
+    // 2. Try to find main content block (Sina Finance often uses id='article')
+    let articleMatch = content.match(/<div[^>]*id=["']article["'][^>]*>([\s\S]*?)<\/div>/i) ||
+                       content.match(/<article[^>]*>([\s\S]*?)<\/article>/i) ||
+                       content.match(/<main[^>]*>([\s\S]*?)<\/main>/i) ||
+                       content.match(/<div[^>]*class=["'][^"']*(?:content|article|post|entry)[^"']*["'][^>]*>([\s\S]*?)<\/div>/i)
 
-    if (mainMatch) {
-      console.log("[InfoPlat] found main content via regex")
-      content = mainMatch[1]
+    let bodyContent = content
+    if (articleMatch) {
+      console.log("[InfoPlat] found article content via regex")
+      bodyContent = articleMatch[1]
     } else {
-      console.log("[InfoPlat] NO main content found, using full body or content")
+      console.log("[InfoPlat] NO article container found, using full content")
     }
 
-    // 3. Strip remaining HTML tags more safely
-    content = content.replace(/<[^>]+>/g, " ")
+    // 3. Strip remaining HTML tags
+    bodyContent = bodyContent.replace(/<[^>]+>/g, "\n")
     
     // 4. Decode common entities
-    content = content.replace(/&nbsp;/g, " ")
-                     .replace(/&quot;/g, "\"")
-                     .replace(/&amp;/g, "&")
-                     .replace(/&lt;/g, "<")
-                     .replace(/&gt;/g, ">")
+    bodyContent = bodyContent.replace(/&nbsp;/g, " ")
+                             .replace(/&quot;/g, "\"")
+                             .replace(/&amp;/g, "&")
+                             .replace(/&lt;/g, "<")
+                             .replace(/&gt;/g, ">")
 
     // 5. Split into lines and filter out lines containing ⬅️
-    let lines = content.split(/[\r\n]+/)
-    let filteredLines = lines.map(l => l.trim())
-                             .filter(l => l.length > 0 && l.indexOf("⬅️") === -1)
+    let lines = bodyContent.split(/[\r\n]+/)
+    let filteredLines = []
+    for (let line of lines) {
+      let trimmed = line.trim()
+      if (trimmed.length > 0 && trimmed.indexOf("⬅️") === -1) {
+        filteredLines.push(trimmed)
+      } else if (trimmed.indexOf("⬅️") !== -1) {
+        console.log("[InfoPlat] filtered line due to arrow: " + trimmed.substring(0, 30))
+      }
+    }
     
     let result = filteredLines.join("\n\n")
+    
+    // Fallback: If result is too short but original was long, use original with basic stripping
+    if (result.length < 100 && content.length > 1000) {
+      console.log("[InfoPlat] result too short, falling back to basic stripping")
+      let fallback = content.replace(/<[^>]+>/g, "\n")
+      let fallbackLines = fallback.split(/[\r\n]+/)
+      let finalFallback = fallbackLines.map(l => l.trim()).filter(l => l.length > 20 && l.indexOf("⬅️") === -1)
+      result = finalFallback.join("\n\n")
+    }
+
     console.log("[InfoPlat] parseHTML final output snippet: " + result.substring(0, 100))
     return result
   },

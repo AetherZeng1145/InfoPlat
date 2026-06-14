@@ -61,7 +61,7 @@ function request(options) {
 
 function stripHtmlAndFilter(text) {
   if (!text) return ""
-  // 1. Remove HTML tags using a more robust regex
+  // 1. Remove HTML tags safely
   let cleanText = text.replace(/<[^>]+>/g, " ")
   
   // 2. Decode basic HTML entities
@@ -71,7 +71,7 @@ function stripHtmlAndFilter(text) {
                        .replace(/&lt;/g, "<")
                        .replace(/&gt;/g, ">")
 
-  // 3. Split into lines and filter out lines containing ⬅️
+  // 3. Filter lines containing ⬅️
   let lines = cleanText.split(/[\r\n]+/)
   let filteredLines = lines.filter((line) => line.indexOf("⬅️") === -1)
   

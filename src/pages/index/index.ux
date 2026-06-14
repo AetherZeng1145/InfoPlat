@@ -149,6 +149,9 @@ export default {
   },
 
   onInit() {
+    // Robust boolean check
+    this.isDark = String(this.isDark) === "true"
+    console.log("[InfoPlat] index onInit, isDark: " + this.isDark)
     this.boot()
   },
 
