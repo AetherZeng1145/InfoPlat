@@ -67,12 +67,14 @@ export default {
   parseHTML(html) {
     if (!html) return ""
     
-    // 1. Pre-cleanup: remove scripts and styles
+    // 1. Pre-cleanup: remove scripts, styles, and common noise elements
     let content = html.replace(/<script[^>]*>([\s\S]*?)<\/script>/gi, "")
                       .replace(/<style[^>]*>([\s\S]*?)<\/style>/gi, "")
+                      .replace(/<nav[^>]*>([\s\S]*?)<\/nav>/gi, "")
+                      .replace(/<footer[^>]*>([\s\S]*?)<\/footer>/gi, "")
     console.log("[InfoPlat] after cleanup length: " + content.length)
 
-    // 2. Try to find main content block (Sina Finance often uses id='article')
+    // 2. Try to find main content block
     let articleMatch = content.match(/<div[^>]*id=["']article["'][^>]*>([\s\S]*?)<\/div>/i) ||
                        content.match(/<article[^>]*>([\s\S]*?)<\/article>/i) ||
                        content.match(/<main[^>]*>([\s\S]*?)<\/main>/i) ||
@@ -82,8 +84,6 @@ export default {
     if (articleMatch) {
       console.log("[InfoPlat] found article content via regex")
       bodyContent = articleMatch[1]
-    } else {
-      console.log("[InfoPlat] NO article container found, using full content")
     }
 
     // 3. Strip remaining HTML tags
@@ -96,27 +96,43 @@ export default {
                              .replace(/&lt;/g, "<")
                              .replace(/&gt;/g, ">")
 
-    // 5. Split into lines and filter out lines containing ⬅️
+    // 5. Intelligent Noise Filtering
+    const blacklist = [
+      "Copyright", "版权所有", "隐私政策", "关于我们", "联系我们", "关注我们",
+      "广告", "赞助商", "推荐阅读", "相关新闻", "点击下载", "扫码", "微信", "客户端",
+      "WeChat", "App", "Download", "Share to", "分享到", "评论", "登录", "注册",
+      "底部菜单", "网站地图", "京ICP备"
+    ]
+    
     let lines = bodyContent.split(/[\r\n]+/)
     let filteredLines = []
     for (let line of lines) {
       let trimmed = line.trim()
-      if (trimmed.length > 0 && trimmed.indexOf("⬅️") === -1) {
-        filteredLines.push(trimmed)
-      } else if (trimmed.indexOf("⬅️") !== -1) {
-        console.log("[InfoPlat] filtered line due to arrow: " + trimmed.substring(0, 30))
+      
+      // Basic quality checks
+      if (trimmed.length < 15) continue // Skip very short lines (usually nav/date)
+      if (trimmed.indexOf("⬅️") !== -1) continue // User request
+      
+      // Blacklist check
+      let isNoise = blacklist.some(word => trimmed.indexOf(word) !== -1)
+      if (isNoise) {
+        console.log("[InfoPlat] filtered noise line: " + trimmed.substring(0, 20))
+        continue
       }
+      
+      filteredLines.push(trimmed)
     }
     
     let result = filteredLines.join("\n\n")
     
-    // Fallback: If result is too short but original was long, use original with basic stripping
-    if (result.length < 100 && content.length > 1000) {
-      console.log("[InfoPlat] result too short, falling back to basic stripping")
-      let fallback = content.replace(/<[^>]+>/g, "\n")
-      let fallbackLines = fallback.split(/[\r\n]+/)
-      let finalFallback = fallbackLines.map(l => l.trim()).filter(l => l.length > 20 && l.indexOf("⬅️") === -1)
-      result = finalFallback.join("\n\n")
+    // Fallback: If result is too short, try to recover from original content with looser rules
+    if (result.length < 150 && content.length > 1000) {
+      console.log("[InfoPlat] result too short, attempting recovery")
+      let recoverLines = content.replace(/<[^>]+>/g, "\n").split(/[\r\n]+/)
+      result = recoverLines.map(l => l.trim())
+                           .filter(l => l.length > 30 && l.indexOf("⬅️") === -1)
+                           .slice(0, 30) // Take first 30 quality paragraphs
+                           .join("\n\n")
     }
 
     console.log("[InfoPlat] parseHTML final output snippet: " + result.substring(0, 100))
