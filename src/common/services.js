@@ -59,12 +59,22 @@ function request(options) {
   })
 }
 
+function stripHtmlAndFilter(text) {
+  if (!text) return ""
+  // 1. Remove HTML tags using regex
+  let cleanText = text.replace(/<[^>]*>?/gm, "")
+  // 2. Split into lines and filter out lines containing ⬅️
+  let lines = cleanText.split(/[\r\n]+/)
+  let filteredLines = lines.filter((line) => line.indexOf("⬅️") === -1)
+  return filteredLines.join("\n").trim()
+}
+
 function normalizeNews(item) {
   const category = item.category && item.category.length ? item.category.join(" / ") : "Currents"
   return {
     id: item.id || "",
-    title: item.title || "未命名新闻",
-    description: item.description || "暂无摘要",
+    title: stripHtmlAndFilter(item.title) || "未命名新闻",
+    description: stripHtmlAndFilter(item.description) || "暂无摘要",
     source: item.author || category,
     category: category,
     url: item.url || "",
