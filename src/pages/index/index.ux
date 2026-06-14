@@ -178,6 +178,19 @@ export default {
     console.log("[InfoPlat] theme toggled, isDark: " + this.isDark)
   },
 
+  showDetail(item) {
+    if (!item || !item.title) return
+    router.push({
+      uri: "pages/detail",
+      params: {
+        title: item.title,
+        description: item.description,
+        source: item.source,
+        url: item.url
+      }
+    })
+  },
+
   refreshCurrent() {
     if (this.activeTab === "news") {
       this.reloadNews()
@@ -574,18 +587,17 @@ text {
 }
 
 .news-grid {
-  height: 290px;
   margin-top: 14px;
   flex-direction: row;
   flex-wrap: wrap;
+  justify-content: space-between;
 }
 
 .news-item {
-  width: 260px;
-  height: 74px;
-  margin-right: 14px;
+  width: 257px;
+  height: 90px;
   margin-bottom: 14px;
-  padding: 10px;
+  padding: 12px;
   border-radius: 8px;
 }
 
@@ -670,6 +682,11 @@ text {
 }
 
 .theme-btn-dark {
+  background-color: #1a2c40;
+  color: #6fb2ff;
+}
+</style>
+ark {
   background-color: #1a2c40;
   color: #6fb2ff;
 }
