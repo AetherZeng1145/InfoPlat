@@ -41,37 +41,82 @@ function parseData(data) {
 }
 
 function request(options) {
-  console.log("[InfoPlat] request " + options.url)
+  const url = options.url
+  const method = options.method || "GET"
+  const responseType = options.responseType || "json"
+  
+  console.info("[InfoPlat] >>> Request [" + method + "]: " + url)
+  
   return new Promise((resolve, reject) => {
+    let isCompleted = false
+    
+    // Set a manual 60s timeout
+    const timeoutId = setTimeout(() => {
+      if (!isCompleted) {
+        isCompleted = true
+        console.error("[InfoPlat] !!! Request Timeout (60s): " + url)
+        reject(new Error("Timeout"))
+      }
+    }, 60000)
+
     fetch.fetch({
-      url: options.url,
-      method: "GET",
+      url: url,
+      method: method,
       header: options.header || {},
+      responseType: responseType,
       success(res) {
-        console.log("[InfoPlat] response " + (res.code || res.statusCode || "ok"))
-        resolve(parseData(res.data))
+        if (isCompleted) return
+        isCompleted = true
+        clearTimeout(timeoutId)
+
+        const code = res.code || res.statusCode
+        console.info("[InfoPlat] <<< Response Code: " + code + " for " + url)
+        
+        let data = res.data
+        if (responseType === "json" && typeof data === "string") {
+          data = parseData(data)
+        }
+
+        if (code >= 200 && code < 300) {
+          resolve(data)
+        } else {
+          console.error("[InfoPlat] !!! Request HTTP Error: " + code + " Data: " + JSON.stringify(data))
+          reject(new Error("HTTP " + code))
+        }
       },
-      fail(err) {
-        console.log("[InfoPlat] request failed")
-        reject(err)
+      fail(data, code) {
+        if (isCompleted) return
+        isCompleted = true
+        clearTimeout(timeoutId)
+        
+        console.error("[InfoPlat] !!! Request Failed: Code " + code + " Msg: " + data)
+        reject(new Error("Fetch failed: " + code))
       }
     })
   })
 }
 
+/**
+ * Fetch raw text/html
+ */
+export function fetchText(url) {
+  return request({
+    url: url,
+    method: "GET",
+    responseType: "text"
+  })
+}
+
 function stripHtmlAndFilter(text) {
   if (!text) return ""
-  // 1. Remove HTML tags safely
+  // Reduced logging here to avoid flooding, but keeping the core filter
   let cleanText = text.replace(/<[^>]+>/g, " ")
-  
-  // 2. Decode basic HTML entities
   cleanText = cleanText.replace(/&nbsp;/g, " ")
                        .replace(/&quot;/g, "\"")
                        .replace(/&amp;/g, "&")
                        .replace(/&lt;/g, "<")
                        .replace(/&gt;/g, ">")
 
-  // 3. Filter lines containing ⬅️
   let lines = cleanText.split(/[\r\n]+/)
   let filteredLines = lines.filter((line) => line.indexOf("⬅️") === -1)
   
@@ -79,6 +124,7 @@ function stripHtmlAndFilter(text) {
 }
 
 function normalizeNews(item) {
+  if (!item) return null
   const category = item.category && item.category.length ? item.category.join(" / ") : "Currents"
   return {
     id: item.id || "",
@@ -93,22 +139,25 @@ function normalizeNews(item) {
 
 export function getLatestNews(options) {
   const params = options || {}
+  // Join categories if it's an array, otherwise default to general
   const categories = params.categories && params.categories.length ? params.categories.join(",") : "general"
+  
   const query = encodeQuery({
     language: "zh",
     country: "CN",
     category: categories,
-    page_size: params.pageSize || 8,
-    apiKey: CURRENTS_API_KEY
+    page_size: params.pageSize || 20,
+    apiKey: CURRENTS_API_KEY.trim()
   })
 
   return request({
     url: CURRENTS_BASE_URL + "/latest-news?" + query
   }).then((data) => {
     if (!data || data.status !== "ok" || !data.news) {
+      console.error("[InfoPlat] News data status not ok: " + (data ? data.status : "null"))
       return []
     }
-    return data.news.map(normalizeNews)
+    return data.news.map(normalizeNews).filter(i => i !== null)
   })
 }
 

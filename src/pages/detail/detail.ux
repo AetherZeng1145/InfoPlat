@@ -18,7 +18,7 @@
 
 <script>
 import router from "@system.router"
-import fetch from "@system.fetch"
+import { fetchText } from "../../common/services"
 
 export default {
   private: {
@@ -32,9 +32,8 @@ export default {
   },
 
   onInit() {
-    // Force boolean conversion because router params are often strings
     this.isDark = String(this.isDark) === "true"
-    console.log("[InfoPlat] detail onInit, isDark: " + this.isDark + " url: " + this.url)
+    console.info("[InfoPlat] [Detail] Page Init, URL: " + this.url)
     
     if (this.url) {
       this.fetchFullContent()
@@ -43,99 +42,109 @@ export default {
 
   fetchFullContent() {
     this.loading = true
-    console.log("[InfoPlat] fetching full content: " + this.url)
-    fetch.fetch({
-      url: this.url,
-      method: "GET",
-      success: (res) => {
-        console.log("[InfoPlat] fetch success, data length: " + (res.data ? res.data.length : 0))
-        if (res.data) {
-          this.fullContent = this.parseHTML(res.data)
-          console.log("[InfoPlat] final processed content length: " + this.fullContent.length)
+    fetchText(this.url)
+      .then((data) => {
+        this.loading = false
+        if (data) {
+          this.fullContent = this.parseHTML(data)
         } else {
-          console.log("[InfoPlat] fetch success but NO DATA")
+          this.fullContent = "获取内容为空"
         }
+      })
+      .catch((err) => {
         this.loading = false
-      },
-      fail: (data, code) => {
-        console.log("[InfoPlat] fetch failed, code: " + code + " data: " + data)
-        this.loading = false
-      }
-    })
+        this.fullContent = "加载失败: " + err.message
+        console.error("[InfoPlat] [Detail] Fetch error: " + err.message)
+      })
   },
 
   parseHTML(html) {
     if (!html) return ""
+    console.log("[InfoPlat] [Parse] START RAW HTML (length: " + html.length + ")")
     
-    // 1. Pre-cleanup: remove scripts, styles, and common noise elements
-    let content = html.replace(/<script[^>]*>([\s\S]*?)<\/script>/gi, "")
+    // 1. Pre-cleanup
+    let content = html.replace(/<head[^>]*>([\s\S]*?)<\/head>/gi, "")
+                      .replace(/<header[^>]*>([\s\S]*?)<\/header>/gi, "")
+                      .replace(/<script[^>]*>([\s\S]*?)<\/script>/gi, "")
                       .replace(/<style[^>]*>([\s\S]*?)<\/style>/gi, "")
                       .replace(/<nav[^>]*>([\s\S]*?)<\/nav>/gi, "")
                       .replace(/<footer[^>]*>([\s\S]*?)<\/footer>/gi, "")
-    console.log("[InfoPlat] after cleanup length: " + content.length)
 
-    // 2. Try to find main content block
-    let articleMatch = content.match(/<div[^>]*id=["']article["'][^>]*>([\s\S]*?)<\/div>/i) ||
-                       content.match(/<article[^>]*>([\s\S]*?)<\/article>/i) ||
-                       content.match(/<main[^>]*>([\s\S]*?)<\/main>/i) ||
-                       content.match(/<div[^>]*class=["'][^"']*(?:content|article|post|entry)[^"']*["'][^>]*>([\s\S]*?)<\/div>/i)
-
-    let bodyContent = content
-    if (articleMatch) {
-      console.log("[InfoPlat] found article content via regex")
-      bodyContent = articleMatch[1]
-    }
-
-    // 3. Strip remaining HTML tags
-    bodyContent = bodyContent.replace(/<[^>]+>/g, "\n")
-    
-    // 4. Decode common entities
-    bodyContent = bodyContent.replace(/&nbsp;/g, " ")
-                             .replace(/&quot;/g, "\"")
-                             .replace(/&amp;/g, "&")
-                             .replace(/&lt;/g, "<")
-                             .replace(/&gt;/g, ">")
-
-    // 5. Intelligent Noise Filtering
-    const blacklist = [
-      "Copyright", "版权所有", "隐私政策", "关于我们", "联系我们", "关注我们",
-      "广告", "赞助商", "推荐阅读", "相关新闻", "点击下载", "扫码", "微信", "客户端",
-      "WeChat", "App", "Download", "Share to", "分享到", "评论", "登录", "注册",
-      "底部菜单", "网站地图", "京ICP备"
+    // 2. Identify main content container
+    const containers = [
+      /<div[^>]*id=["']artibody["'][^>]*>([\s\S]*?)<\/div>/i,
+      /<div[^>]*id=["']article["'][^>]*>([\s\S]*?)<\/div>/i,
+      /<article[^>]*>([\s\S]*?)<\/article>/i,
+      /<main[^>]*>([\s\S]*?)<\/main>/i,
+      /<div[^>]*class=["'][^"']*(?:content|article|post|entry)[^"']*["'][^>]*>([\s\S]*?)<\/div>/i
     ]
-    
-    let lines = bodyContent.split(/[\r\n]+/)
-    let filteredLines = []
-    for (let line of lines) {
-      let trimmed = line.trim()
-      
-      // Basic quality checks
-      if (trimmed.length < 15) continue // Skip very short lines (usually nav/date)
-      if (trimmed.indexOf("⬅️") !== -1) continue // User request
-      
-      // Blacklist check
-      let isNoise = blacklist.some(word => trimmed.indexOf(word) !== -1)
-      if (isNoise) {
-        console.log("[InfoPlat] filtered noise line: " + trimmed.substring(0, 20))
-        continue
+
+    let bodyContent = ""
+    for (let regex of containers) {
+      let match = content.match(regex)
+      if (match && match[1].length > 100) {
+        bodyContent = match[1]
+        console.log("[InfoPlat] [Parse] Matched container: " + regex)
+        break
       }
-      
-      filteredLines.push(trimmed)
-    }
-    
-    let result = filteredLines.join("\n\n")
-    
-    // Fallback: If result is too short, try to recover from original content with looser rules
-    if (result.length < 150 && content.length > 1000) {
-      console.log("[InfoPlat] result too short, attempting recovery")
-      let recoverLines = content.replace(/<[^>]+>/g, "\n").split(/[\r\n]+/)
-      result = recoverLines.map(l => l.trim())
-                           .filter(l => l.length > 30 && l.indexOf("⬅️") === -1)
-                           .slice(0, 30) // Take first 30 quality paragraphs
-                           .join("\n\n")
     }
 
-    console.log("[InfoPlat] parseHTML final output snippet: " + result.substring(0, 100))
+    // 3. Filtering Logic
+    const blacklist = [
+      "Copyright", "版权所有", "隐私政策", "关于我们", "广告", "赞助商", 
+      "推荐阅读", "相关新闻", "扫码", "微信", "二维码", "关注", 
+      "24小时滚动播报", "财经早报", "操盘必读", "券商策略", "SINA Corporation",
+      "点击下载", "客户端", "App", "分享到", "责任编辑", "粉丝福利", "新浪财经"
+    ]
+
+    const filterText = (raw) => {
+      if (!raw) return ""
+      // 1. Remove placeholders and comment artifacts
+      let text = raw.replace(/@@[\s\S]*?@@/g, "")
+                    .replace(/<!--[\s\S]*?-->/g, "")
+                    .replace(/标签添加class=["'][^"']+["']-->/g, "")
+      
+      // 2. Strip tags and decode
+      return text.replace(/<[^>]+>/g, "\n")
+                .replace(/&nbsp;/g, " ")
+                .replace(/&quot;/g, "\"")
+                .replace(/&amp;/g, "&")
+                .replace(/&lt;/g, "<")
+                .replace(/&gt;/g, ">")
+                .split(/[\r\n]+/)
+                .map(l => l.trim())
+                .filter(l => {
+                  if (l.length < 10) return false
+                  if (l.indexOf("⬅️") !== -1) return false
+                  
+                  const blacklist = [
+                    "Copyright", "版权所有", "隐私政策", "关于我们", "广告", "赞助商", 
+                    "推荐阅读", "相关新闻", "扫码", "微信", "二维码", "关注", 
+                    "24小时滚动播报", "财经早报", "操盘必读", "券商策略", "SINA Corporation",
+                    "点击下载", "客户端", "App", "分享到", "责任编辑", "粉丝福利", "新浪财经",
+                    "About Sina", "SINA English", "All Rights Reserved", "用户", "在线解读",
+                    "挖掘板块龙头", "涨停分析", "沪深两市", "分不剩", "抱有幻想", "清仓的机会",
+                    "没人玩了", "举报", "回复"
+                  ]
+                  return !blacklist.some(word => l.indexOf(word) !== -1)
+                })
+                .join("\n\n")
+    }
+
+    let result = filterText(bodyContent)
+    
+    // 4. Fallback: Only if primary is truly empty or extremely short (< 30)
+    // For many short news, 30-50 chars IS the content.
+    if (result.length < 30 && content.length > 500) {
+      console.log("[InfoPlat] [Parse] Primary result way too thin (" + result.length + "), using broader fallback")
+      let fallbackResult = filterText(content)
+      if (fallbackResult.length > result.length) {
+        result = fallbackResult
+      }
+    }
+
+    console.log("[InfoPlat] [Parse] FINAL CLEAN TEXT (length: " + result.length + ")")
+    console.log(result)
     return result
   },
 

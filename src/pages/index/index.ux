@@ -320,10 +320,10 @@ export default {
     this.hasError = false
     this.stateText = "正在请求新闻"
     this.showNewsContent = false
-    console.log("[InfoPlat] load news " + categories.join(","))
+    console.info("[InfoPlat] [Index] Loading news: " + categories.join(","))
     getLatestNews({
       categories: categories,
-      pageSize: 8
+      pageSize: 20
     })
       .then((list) => {
         this.newsList = list.length > 1 ? list.slice(1) : []
@@ -331,10 +331,10 @@ export default {
         this.loading = false
         this.showNewsContent = true
       })
-      .catch(() => {
+      .catch((err) => {
         this.loading = false
         this.hasError = true
-        this.errorText = "新闻获取失败，请检查网络、CurrentsAPI key、分类参数和接口额度。"
+        this.errorText = "新闻获取失败: " + err.message
       })
   },
 
