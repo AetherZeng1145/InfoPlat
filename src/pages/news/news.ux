@@ -1,0 +1,129 @@
+<template>
+  <div class="detail-page">
+    <div class="header">
+      <div class="back-button" onclick="goBack">
+        <text class="back-text">返回</text>
+      </div>
+      <text class="page-title">新闻详情</text>
+    </div>
+    <div class="content">
+      <text class="news-title">{{ title }}</text>
+      <div class="meta-info">
+        <text class="news-source">{{ source }}</text>
+        <text class="news-dot">·</text>
+        <text class="news-time">{{ time }}</text>
+      </div>
+      <text class="news-body">{{ description }}</text>
+    </div>
+  </div>
+</template>
+
+<script>
+  import router from '@system.router'
+
+  export default {
+    private: {
+      title: '',
+      source: '',
+      time: '',
+      description: '',
+      url: ''
+    },
+
+    onCreate() {
+      var params = router.getParams()
+      if (params) {
+        this.title = params.title || ''
+        this.source = params.source || ''
+        this.time = params.time || ''
+        this.description = params.description || ''
+        this.url = params.url || ''
+      }
+    },
+
+    goBack() {
+      router.back()
+    }
+  }
+</script>
+
+<style>
+  .detail-page {
+    flex-direction: column;
+    width: 800px;
+    height: 600px;
+    background-color: #0f1923;
+  }
+
+  .header {
+    flex-direction: row;
+    align-items: center;
+    padding: 20px 24px;
+    background-color: #1a2634;
+    border-bottom: 1px solid #2a3a4a;
+  }
+
+  .back-button {
+    padding: 12px 20px;
+    background-color: #2a3a4a;
+    border-radius: 20px;
+    cursor: pointer;
+    margin-right: 20px;
+  }
+
+  .back-text {
+    font-size: 20px;
+    color: #c0d0e0;
+  }
+
+  .page-title {
+    font-size: 26px;
+    color: #e0e8f0;
+    font-weight: bold;
+  }
+
+  .content {
+    flex: 1;
+    padding: 28px;
+    flex-direction: column;
+    overflow: scroll;
+  }
+
+  .news-title {
+    font-size: 32px;
+    color: #e0e8f0;
+    font-weight: bold;
+    margin-bottom: 20px;
+    line-height: 42px;
+  }
+
+  .meta-info {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #2a3a4a;
+  }
+
+  .news-source {
+    font-size: 18px;
+    color: #5cb8ff;
+  }
+
+  .news-dot {
+    font-size: 18px;
+    color: #4a5a6a;
+    margin: 0 10px;
+  }
+
+  .news-time {
+    font-size: 18px;
+    color: #6a7a8a;
+  }
+
+  .news-body {
+    font-size: 22px;
+    color: #c0d0e0;
+    line-height: 34px;
+  }
+</style>

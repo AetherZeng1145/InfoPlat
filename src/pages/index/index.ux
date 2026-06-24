@@ -1,0 +1,686 @@
+<template>
+  <div class="page {{ isDark ? 'page-dark' : 'page-light' }}">
+    <div class="side-bar {{ isDark ? 'side-bar-dark' : 'side-bar-light' }}">
+      <div class="brand-block">
+        <text class="brand-en">INFOPLAT</text>
+        <text class="brand-title {{ isDark ? 'text-dark' : 'text-light' }}">信息台</text>
+      </div>
+
+      <div class="time-block">
+        <text class="time-text {{ isDark ? 'text-dark' : 'text-light' }}">{{ currentTime }}</text>
+        <text class="mode-text {{ isDark ? 'text-dark-sub' : 'text-light-sub' }}">{{ modeLabel }}</text>
+      </div>
+
+      <div class="nav-block">
+        <input class="{{ newsNavClass }} {{ isDark ? 'btn-dark' : 'btn-light' }}" type="button" value="新闻" onclick="showNews" />
+        <input class="{{ weatherNavClass }} {{ isDark ? 'btn-dark' : 'btn-light' }}" type="button" value="天气" onclick="showWeather" />
+        <input class="{{ expressNavClass }} {{ isDark ? 'btn-dark' : 'btn-light' }}" type="button" value="快递" onclick="showExpress" />
+      </div>
+
+      <input class="theme-button {{ isDark ? 'theme-btn-dark' : 'theme-btn-light' }}" type="button" value="{{ themeButtonText }}" onclick="toggleTheme" />
+    </div>
+
+    <div class="main-panel {{ isDark ? 'main-panel-dark' : 'main-panel-light' }}">
+      <div class="action-row">
+        <scroll class="category-scroll" scroll-x="true" scroll-y="false" bounces="true" if="{{ showNewsPanel }}">
+          <div class="category-track">
+            <input class="{{ allCategoryClass }} {{ isDark ? 'btn-dark' : 'btn-light' }}" type="button" value="综合新闻" onclick="loadNewsAll" />
+            <input class="{{ worldCategoryClass }} {{ isDark ? 'btn-dark' : 'btn-light' }}" type="button" value="国际新闻" onclick="loadNewsWorld" />
+            <input class="{{ techCategoryClass }} {{ isDark ? 'btn-dark' : 'btn-light' }}" type="button" value="科技新闻" onclick="loadNewsTech" />
+            <input class="{{ businessCategoryClass }} {{ isDark ? 'btn-dark' : 'btn-light' }}" type="button" value="财经新闻" onclick="loadNewsBusiness" />
+            <input class="{{ sportsCategoryClass }} {{ isDark ? 'btn-dark' : 'btn-light' }}" type="button" value="体育新闻" onclick="loadNewsSports" />
+            <input class="{{ entertainmentCategoryClass }} {{ isDark ? 'btn-dark' : 'btn-light' }}" type="button" value="娱乐新闻" onclick="loadNewsEntertainment" />
+            <input class="{{ scienceCategoryClass }} {{ isDark ? 'btn-dark' : 'btn-light' }}" type="button" value="科学新闻" onclick="loadNewsScience" />
+            <input class="{{ politicsCategoryClass }} {{ isDark ? 'btn-dark' : 'btn-light' }}" type="button" value="政治新闻" onclick="loadNewsPolitics" />
+            <input class="{{ healthCategoryClass }} {{ isDark ? 'btn-dark' : 'btn-light' }}" type="button" value="健康新闻" onclick="loadNewsHealth" />
+          </div>
+        </scroll>
+        <input class="refresh-button" type="button" value="{{ actionText }}" onclick="refreshCurrent" />
+      </div>
+
+      <div class="state-box" if="{{ loading }}">
+        <text class="state-title {{ isDark ? 'text-dark' : 'text-light' }}">正在加载</text>
+        <text class="state-text {{ isDark ? 'text-dark-sub' : 'text-light-sub' }}">{{ stateText }}</text>
+      </div>
+
+      <div class="state-box" if="{{ hasError }}">
+        <text class="state-title error-title">加载失败</text>
+        <text class="state-text {{ isDark ? 'text-dark-sub' : 'text-light-sub' }}">{{ errorText }}</text>
+      </div>
+
+      <div class="news-panel" if="{{ showNewsContent }}">
+        <div class="lead-news {{ isDark ? 'card-dark' : 'card-light' }}" onclick="showDetail(leadNews)">
+          <text class="lead-tag">{{ leadNews.category }}</text>
+          <text class="lead-title {{ isDark ? 'text-dark' : 'text-light' }}">{{ leadNews.title }}</text>
+          <text class="lead-desc {{ isDark ? 'text-dark-sub' : 'text-light-sub' }}">{{ leadNews.description }}</text>
+          <text class="lead-source {{ isDark ? 'text-dark-sub' : 'text-light-sub' }}">{{ leadNews.source }} {{ leadNews.published }}</text>
+        </div>
+        <div class="news-grid">
+          <div class="news-item {{ isDark ? 'card-dark' : 'card-light' }}" for="{{ newsList }}" onclick="showDetail($item)">
+            <text class="news-item-title {{ isDark ? 'text-dark' : 'text-light' }}">{{ $item.title }}</text>
+            <text class="news-item-source {{ isDark ? 'text-dark-sub' : 'text-light-sub' }}">{{ $item.source }}</text>
+          </div>
+        </div>
+      </div>
+
+      <div class="data-panel {{ isDark ? 'card-dark' : 'card-light' }}" if="{{ showWeatherContent }}">
+        <text class="data-kicker">{{ weatherInfo.subtitle }}</text>
+        <text class="data-title {{ isDark ? 'text-dark' : 'text-light' }}">{{ weatherInfo.title }}</text>
+        <text class="data-main">{{ weatherInfo.message }}</text>
+        <div class="detail-list">
+          <text class="detail-line {{ isDark ? 'text-dark-sub' : 'text-light-sub' }}" for="{{ weatherInfo.details }}">{{ $item }}</text>
+        </div>
+      </div>
+
+      <div class="data-panel {{ isDark ? 'card-dark' : 'card-light' }}" if="{{ showExpressContent }}">
+        <text class="data-kicker">{{ expressInfo.subtitle }}</text>
+        <text class="data-title {{ isDark ? 'text-dark' : 'text-light' }}">{{ expressInfo.title }}</text>
+        <text class="data-main">{{ expressInfo.message }}</text>
+        <div class="detail-list">
+          <text class="detail-line {{ isDark ? 'text-dark-sub' : 'text-light-sub' }}" for="{{ expressInfo.details }}">{{ $item }}</text>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import router from "@system.router"
+import { getLatestNews, getWeather, getExpress } from "../../common/services"
+
+function pad(value) {
+  return value < 10 ? "0" + value : "" + value
+}
+
+function emptyNews() {
+  return {
+    title: "暂无新闻",
+    description: "请检查网络连接或 CurrentsAPI key。",
+    source: "Currents",
+    category: "综合",
+    published: ""
+  }
+}
+
+export default {
+  private: {
+    isDark: false,
+    themeButtonText: "深色模式",
+    modeLabel: "浅色",
+    currentTime: "--:--",
+    booted: false,
+    activeTab: "news",
+    activeCategory: "all",
+    actionText: "刷新",
+    loading: false,
+    hasError: false,
+    stateText: "",
+    errorText: "",
+    showNewsPanel: true,
+    showNewsContent: false,
+    showWeatherContent: false,
+    showExpressContent: false,
+    newsNavClass: "nav-button nav-button-active",
+    weatherNavClass: "nav-button",
+    expressNavClass: "nav-button",
+    allCategoryClass: "category-button category-button-active",
+    worldCategoryClass: "category-button",
+    techCategoryClass: "category-button",
+    businessCategoryClass: "category-button",
+    sportsCategoryClass: "category-button",
+    entertainmentCategoryClass: "category-button",
+    scienceCategoryClass: "category-button",
+    politicsCategoryClass: "category-button",
+    healthCategoryClass: "category-button",
+    leadNews: emptyNews(),
+    newsList: [],
+    weatherInfo: {
+      title: "天气服务待配置",
+      subtitle: "聚合数据-全国天气预报",
+      message: "等待接口 key",
+      details: ["申请 juhe.cn 天气 key 后启用。"]
+    },
+    expressInfo: {
+      title: "快递服务待配置",
+      subtitle: "聚合数据-全球快递物流查询",
+      message: "等待接口 key",
+      details: ["申请 juhe.cn 快递 key 后启用。"]
+    }
+  },
+
+  onInit() {
+    this.isDark = String(this.isDark) === "true"
+    this.boot()
+  },
+
+  onShow() {
+    this.boot()
+  },
+
+  boot() {
+    if (this.booted) return
+    this.booted = true
+    this.updateClock()
+    this.loadNewsAll()
+    this.loadWeatherData()
+    this.loadExpressData()
+  },
+
+  updateClock() {
+    const now = new Date()
+    this.currentTime = pad(now.getHours()) + ":" + pad(now.getMinutes())
+  },
+
+  toggleTheme() {
+    this.isDark = !this.isDark
+    this.themeButtonText = this.isDark ? "浅色模式" : "深色模式"
+    this.modeLabel = this.isDark ? "深色" : "浅色"
+  },
+
+  showDetail(item) {
+    if (!item || !item.title) return
+    router.push({
+      uri: "/pages/detail/detail",
+      params: {
+        title: item.title,
+        description: item.description,
+        source: item.source,
+        url: item.url,
+        isDark: this.isDark
+      }
+    })
+  },
+
+  refreshCurrent() {
+    if (this.activeTab === "news") {
+      this.reloadNews()
+    } else if (this.activeTab === "weather") {
+      this.loadWeatherData()
+    } else {
+      this.loadExpressData()
+    }
+  },
+
+  showNews() {
+    this.setTab("news")
+    if (!this.newsList.length) this.loadNewsAll()
+  },
+
+  showWeather() {
+    this.setTab("weather")
+  },
+
+  showExpress() {
+    this.setTab("express")
+  },
+
+  setTab(tab) {
+    this.activeTab = tab
+    this.hasError = false
+    this.showNewsPanel = tab === "news"
+    this.showNewsContent = tab === "news" && !this.loading && !this.hasError
+    this.showWeatherContent = tab === "weather" && !this.loading && !this.hasError
+    this.showExpressContent = tab === "express" && !this.loading && !this.hasError
+    this.newsNavClass = tab === "news" ? "nav-button nav-button-active" : "nav-button"
+    this.weatherNavClass = tab === "weather" ? "nav-button nav-button-active" : "nav-button"
+    this.expressNavClass = tab === "express" ? "nav-button nav-button-active" : "nav-button"
+    this.actionText = tab === "news" ? "刷新" : "查询"
+  },
+
+  setCategory(category) {
+    this.activeCategory = category
+    this.allCategoryClass = category === "all" ? "category-button category-button-active" : "category-button"
+    this.worldCategoryClass = category === "world" ? "category-button category-button-active" : "category-button"
+    this.techCategoryClass = category === "tech" ? "category-button category-button-active" : "category-button"
+    this.businessCategoryClass = category === "business" ? "category-button category-button-active" : "category-button"
+    this.sportsCategoryClass = category === "sports" ? "category-button category-button-active" : "category-button"
+    this.entertainmentCategoryClass = category === "entertainment" ? "category-button category-button-active" : "category-button"
+    this.scienceCategoryClass = category === "science" ? "category-button category-button-active" : "category-button"
+    this.politicsCategoryClass = category === "politics" ? "category-button category-button-active" : "category-button"
+    this.healthCategoryClass = category === "health" ? "category-button category-button-active" : "category-button"
+  },
+
+  loadNewsAll() {
+    this.setCategory("all")
+    this.loadNews([])
+  },
+
+  loadNewsWorld() {
+    this.setCategory("world")
+    this.loadNews(["world"])
+  },
+
+  loadNewsTech() {
+    this.setCategory("tech")
+    this.loadNews(["technology"])
+  },
+
+  loadNewsBusiness() {
+    this.setCategory("business")
+    this.loadNews(["business", "finance"])
+  },
+
+  loadNewsSports() {
+    this.setCategory("sports")
+    this.loadNews(["sports"])
+  },
+
+  loadNewsEntertainment() {
+    this.setCategory("entertainment")
+    this.loadNews(["entertainment"])
+  },
+
+  loadNewsScience() {
+    this.setCategory("science")
+    this.loadNews(["science"])
+  },
+
+  loadNewsPolitics() {
+    this.setCategory("politics")
+    this.loadNews(["politics"])
+  },
+
+  loadNewsHealth() {
+    this.setCategory("health")
+    this.loadNews(["health"])
+  },
+
+  reloadNews() {
+    if (this.activeCategory === "tech") {
+      this.loadNewsTech()
+    } else if (this.activeCategory === "business") {
+      this.loadNewsBusiness()
+    } else if (this.activeCategory === "world") {
+      this.loadNewsWorld()
+    } else if (this.activeCategory === "sports") {
+      this.loadNewsSports()
+    } else if (this.activeCategory === "entertainment") {
+      this.loadNewsEntertainment()
+    } else if (this.activeCategory === "science") {
+      this.loadNewsScience()
+    } else if (this.activeCategory === "politics") {
+      this.loadNewsPolitics()
+    } else if (this.activeCategory === "health") {
+      this.loadNewsHealth()
+    } else {
+      this.loadNewsAll()
+    }
+  },
+
+  loadNews(categories) {
+    this.setTab("news")
+    this.loading = true
+    this.hasError = false
+    this.stateText = "正在请求新闻"
+    this.showNewsContent = false
+    getLatestNews({
+      categories: categories,
+      pageSize: 40
+    })
+      .then((list) => {
+        this.newsList = list.length > 1 ? list.slice(1) : []
+        this.leadNews = list.length ? list[0] : emptyNews()
+        this.loading = false
+        this.showNewsContent = true
+      })
+      .catch((err) => {
+        this.loading = false
+        this.hasError = true
+        this.errorText = "新闻获取失败: " + err.message
+      })
+  },
+
+  loadWeatherData() {
+    getWeather("北京").then((info) => {
+      this.weatherInfo = info
+      if (this.activeTab === "weather") {
+        this.showWeatherContent = true
+      }
+    })
+  },
+
+  loadExpressData() {
+    getExpress("sf", "").then((info) => {
+      this.expressInfo = info
+      if (this.activeTab === "express") {
+        this.showExpressContent = true
+      }
+    })
+  }
+}
+</script>
+
+<style>
+text {
+  color: #172026;
+  font-size: 20px;
+  line-height: 26px;
+}
+
+.page {
+  width: 800px;
+  height: 600px;
+  flex-direction: row;
+}
+
+.page-light {
+  background-color: #f2f5f6;
+}
+
+.main-panel-light {
+  background-color: #f2f5f6;
+}
+
+.side-bar-light,
+.card-light {
+  background-color: #ffffff;
+}
+
+.text-light {
+  color: #172026;
+}
+
+.text-light-sub {
+  color: #627279;
+}
+
+.side-bar {
+  width: 224px;
+  height: 600px;
+  padding: 24px 20px;
+  flex-direction: column;
+}
+
+.brand-block {
+  height: 126px;
+  flex-direction: column;
+}
+
+.brand-en {
+  font-size: 17px;
+  color: #0074ff;
+}
+
+.brand-title {
+  margin-top: 10px;
+  height: 48px;
+  font-size: 34px;
+  font-weight: bold;
+}
+
+.time-block {
+  height: 100px;
+  margin-top: 4px;
+  padding-top: 8px;
+  flex-direction: column;
+}
+
+.time-text {
+  height: 52px;
+  font-size: 42px;
+  font-weight: bold;
+}
+
+.mode-text {
+  margin-top: 4px;
+  font-size: 18px;
+}
+
+.nav-block {
+  height: 176px;
+  margin-top: 18px;
+  flex-direction: column;
+}
+
+.nav-button {
+  width: 184px;
+  height: 46px;
+  margin-bottom: 14px;
+  border-radius: 6px;
+  background-color: #e8eef0;
+  color: #172026;
+  font-size: 22px;
+  font-weight: bold;
+}
+
+.btn-light {
+  background-color: #e8eef0;
+  color: #172026;
+}
+
+.nav-button-active {
+  background-color: #0074ff;
+  color: #ffffff;
+}
+
+.theme-btn-light {
+  background-color: #e6f1ff;
+  color: #0057bf;
+}
+
+.theme-button {
+  width: 184px;
+  height: 42px;
+  border-radius: 6px;
+  font-size: 19px;
+  font-weight: bold;
+}
+
+.main-panel {
+  width: 576px;
+  height: 600px;
+  padding: 24px 24px;
+  flex-direction: column;
+}
+
+.action-row {
+  height: 44px;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.refresh-button {
+  width: 82px;
+  height: 40px;
+  border-radius: 6px;
+  background-color: #0074ff;
+  color: #ffffff;
+  font-size: 19px;
+  font-weight: bold;
+}
+
+.category-scroll {
+  width: 420px;
+  height: 40px;
+}
+
+.category-track {
+  width: 1050px;
+  height: 40px;
+  flex-direction: row;
+}
+
+.category-button {
+  width: 96px;
+  height: 36px;
+  margin-right: 10px;
+  border-radius: 5px;
+  background-color: #e8eef0;
+  color: #45565d;
+  font-size: 16px;
+}
+
+.category-button-active {
+  background-color: #d9ebff;
+  color: #0057bf;
+  font-weight: bold;
+}
+
+.state-box {
+  height: 420px;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+.state-title {
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.state-text {
+  width: 430px;
+  margin-top: 12px;
+  font-size: 20px;
+  text-align: center;
+}
+
+.error-title {
+  color: #9e3f3f;
+}
+
+.news-panel {
+  height: 480px;
+  margin-top: 18px;
+  flex-direction: column;
+  overflow: scroll;
+}
+
+.lead-news {
+  height: 188px;
+  padding: 18px;
+  border-radius: 8px;
+}
+
+.lead-tag {
+  font-size: 16px;
+  color: #0074ff;
+}
+
+.lead-title {
+  height: 62px;
+  margin-top: 8px;
+  font-size: 27px;
+  line-height: 31px;
+  font-weight: bold;
+  lines: 2;
+  text-overflow: ellipsis;
+}
+
+.lead-desc {
+  height: 42px;
+  margin-top: 8px;
+  font-size: 18px;
+  line-height: 22px;
+  lines: 2;
+  text-overflow: ellipsis;
+}
+
+.lead-source {
+  margin-top: 8px;
+  font-size: 15px;
+  text-overflow: ellipsis;
+}
+
+.news-grid {
+  margin-top: 14px;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.news-item {
+  width: 257px;
+  height: 100px;
+  margin-bottom: 14px;
+  padding: 12px;
+  border-radius: 8px;
+}
+
+.news-item-title {
+  height: 34px;
+  font-size: 17px;
+  line-height: 19px;
+  font-weight: bold;
+  lines: 2;
+  text-overflow: ellipsis;
+}
+
+.news-item-source {
+  margin-top: 7px;
+  font-size: 14px;
+  text-overflow: ellipsis;
+}
+
+.data-panel {
+  height: 490px;
+  margin-top: 18px;
+  padding: 28px;
+  border-radius: 8px;
+  flex-direction: column;
+  overflow: scroll;
+}
+
+.data-kicker {
+  font-size: 18px;
+  color: #0074ff;
+}
+
+.data-title {
+  margin-top: 14px;
+  font-size: 36px;
+  font-weight: bold;
+}
+
+.data-main {
+  margin-top: 14px;
+  font-size: 28px;
+  font-weight: bold;
+  color: #0074ff;
+}
+
+.detail-list {
+  margin-top: 26px;
+  flex-direction: column;
+}
+
+.detail-line {
+  height: 36px;
+  margin-bottom: 8px;
+  font-size: 22px;
+  text-overflow: ellipsis;
+}
+
+/* 暗色主题 */
+.page-dark {
+  background-color: #000000;
+}
+
+.main-panel-dark {
+  background-color: #202020;
+}
+
+.side-bar-dark,
+.card-dark {
+  background-color: #171717;
+}
+
+.text-dark {
+  color: #edf4f4;
+}
+
+.text-dark-sub {
+  color: #aebdc2;
+}
+
+.btn-dark {
+  background-color: #262626;
+  color: #edf4f4;
+}
+
+.theme-btn-dark {
+  background-color: #1a2c40;
+  color: #6fb2ff;
+}
+</style>
