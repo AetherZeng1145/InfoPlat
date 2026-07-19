@@ -1,0 +1,792 @@
+<template>
+  <div class="page {{ isDark ? 'page-dark' : 'page-light' }}">
+    <div class="side-bar {{ isDark ? 'side-bar-dark' : 'side-bar-light' }}">
+      <div class="brand-block">
+        <text class="brand-en">INFOPLAT</text>
+        <text class="brand-title {{ isDark ? 'text-dark' : 'text-light' }}">信息台</text>
+      </div>
+
+      <div class="time-block">
+        <text class="time-text {{ isDark ? 'text-dark' : 'text-light' }}">{{ currentTime }}</text>
+        <text class="mode-text {{ isDark ? 'text-dark-sub' : 'text-light-sub' }}">{{ modeLabel }}</text>
+      </div>
+
+      <div class="nav-block">
+        <input class="nav-button {{ isDark ? 'btn-dark' : 'btn-light' }}" type="button" value="首页" onclick="goHome" />
+        <input class="nav-button {{ isDark ? 'btn-dark' : 'btn-light' }}" type="button" value="新闻" onclick="goNews" />
+        <input class="nav-button {{ isDark ? 'btn-dark' : 'btn-light' }}" type="button" value="天气" onclick="goWeather" />
+        <input class="nav-button nav-button-active" type="button" value="快递" />
+      </div>
+
+      <input class="theme-button {{ isDark ? 'theme-btn-dark' : 'theme-btn-light' }}" type="button" value="{{ themeButtonText }}" onclick="toggleTheme" />
+    </div>
+
+    <div class="main-panel {{ isDark ? 'main-panel-dark' : 'main-panel-light' }}">
+      <div class="express-panel {{ isDark ? 'card-dark' : 'card-light' }}">
+        <div class="express-input-row">
+          <div class="express-input {{ isDark ? 'input-dark' : 'input-light' }}" onclick="toggleKeyboard">
+            <text class="{{ trackingNo ? (isDark ? 'express-input-text-dark' : 'express-input-text') : 'express-input-placeholder' }}">{{ trackingNo || '请输入快递运单号' }}</text>
+          </div>
+          <input class="express-query-btn" type="button" value="查询" onclick="queryExpress" />
+        </div>
+        <div class="express-loading" if="{{ expressLoading }}">
+          <text class="state-text {{ isDark ? 'text-dark-sub' : 'text-light-sub' }}">{{ expressStateText }}</text>
+        </div>
+        <div class="state-box" if="{{ hasError }}">
+          <text class="state-title error-title">加载失败</text>
+          <text class="state-text {{ isDark ? 'text-dark-sub' : 'text-light-sub' }}">{{ errorText }}</text>
+        </div>
+        <scroll class="express-scroll" scroll-y="true" bounces="true" if="{{ !expressLoading &amp;&amp; !showKeyboard }}">
+          <div class="express-info-row" if="{{ expressInfo.status }}">
+            <text class="express-tracking {{ isDark ? 'text-dark' : 'text-light' }}">{{ expressInfo.title }}</text>
+            <text class="express-sep {{ isDark ? 'text-dark-sub' : 'text-light-sub' }}">|</text>
+            <text class="express-cp {{ isDark ? 'text-dark-sub' : 'text-light-sub' }}">{{ expressInfo.subtitle }}</text>
+            <text class="express-sep {{ isDark ? 'text-dark-sub' : 'text-light-sub' }}">|</text>
+            <text class="express-status">{{ expressInfo.status }}</text>
+          </div>
+          <div class="express-info-row" if="{{ !expressInfo.status }}">
+            <text class="express-tracking {{ isDark ? 'text-dark' : 'text-light' }}">{{ expressInfo.title }}</text>
+          </div>
+          <text class="express-msg {{ isDark ? 'text-dark-sub' : 'text-light-sub' }}">{{ expressInfo.message }}</text>
+          <div class="timeline">
+            <div class="timeline-item" for="{{ expressInfo.details }}">
+              <div class="timeline-left">
+                <div class="timeline-dot"></div>
+                <div class="timeline-line"></div>
+              </div>
+              <div class="timeline-right">
+                <text class="timeline-time {{ isDark ? 'text-dark-sub' : 'text-light-sub' }}">{{ $item.time }}</text>
+                <text class="timeline-text {{ isDark ? 'text-dark' : 'text-light' }}">{{ $item.text }}</text>
+              </div>
+            </div>
+          </div>
+          <div class="pagination" if="{{ totalPages > 1 }}">
+            <input class="page-btn {{ isDark ? 'btn-dark' : 'btn-light' }}" type="button" value="上一页" onclick="prevPage" if="{{ currentPage > 1 }}" />
+            <text class="page-info {{ isDark ? 'text-dark-sub' : 'text-light-sub' }}">{{ currentPage }}/{{ totalPages }}</text>
+            <input class="page-btn {{ isDark ? 'btn-dark' : 'btn-light' }}" type="button" value="下一页" onclick="nextPage" if="{{ currentPage < totalPages }}" />
+          </div>
+        </scroll>
+        <div class="saved-section" if="{{ !expressLoading &amp;&amp; !showKeyboard }}">
+          <text class="saved-title {{ isDark ? 'text-dark-sub' : 'text-light-sub' }}">保存的运单</text>
+          <div class="saved-list">
+            <div class="saved-item {{ isDark ? 'saved-item-dark' : '' }}" for="{{ savedList }}">
+              <text class="saved-text {{ isDark ? 'text-dark' : 'text-light' }}" onclick="loadSaved($item)">{{ $item }}</text>
+              <text class="saved-del" onclick="removeSaved($index)">×</text>
+            </div>
+          </div>
+        </div>
+        <div class="keyboard {{ isDark ? 'keyboard-dark' : '' }}" if="{{ showKeyboard }}">
+          <div class="kb-row">
+            <input class="kb-key" type="button" value="1" onclick="onKeyTap('1')" />
+            <input class="kb-key" type="button" value="2" onclick="onKeyTap('2')" />
+            <input class="kb-key" type="button" value="3" onclick="onKeyTap('3')" />
+            <input class="kb-key" type="button" value="4" onclick="onKeyTap('4')" />
+            <input class="kb-key" type="button" value="5" onclick="onKeyTap('5')" />
+            <input class="kb-key" type="button" value="6" onclick="onKeyTap('6')" />
+            <input class="kb-key" type="button" value="7" onclick="onKeyTap('7')" />
+            <input class="kb-key" type="button" value="8" onclick="onKeyTap('8')" />
+            <input class="kb-key" type="button" value="9" onclick="onKeyTap('9')" />
+            <input class="kb-key" type="button" value="0" onclick="onKeyTap('0')" />
+            <input class="kb-key" type="button" value="-" onclick="onKeyTap('-')" />
+          </div>
+          <div class="kb-row">
+            <input class="kb-key" type="button" value="Q" onclick="onKeyTap('Q')" />
+            <input class="kb-key" type="button" value="W" onclick="onKeyTap('W')" />
+            <input class="kb-key" type="button" value="E" onclick="onKeyTap('E')" />
+            <input class="kb-key" type="button" value="R" onclick="onKeyTap('R')" />
+            <input class="kb-key" type="button" value="T" onclick="onKeyTap('T')" />
+            <input class="kb-key" type="button" value="Y" onclick="onKeyTap('Y')" />
+            <input class="kb-key" type="button" value="U" onclick="onKeyTap('U')" />
+            <input class="kb-key" type="button" value="I" onclick="onKeyTap('I')" />
+            <input class="kb-key" type="button" value="O" onclick="onKeyTap('O')" />
+            <input class="kb-key" type="button" value="P" onclick="onKeyTap('P')" />
+          </div>
+          <div class="kb-row">
+            <input class="kb-key" type="button" value="A" onclick="onKeyTap('A')" />
+            <input class="kb-key" type="button" value="S" onclick="onKeyTap('S')" />
+            <input class="kb-key" type="button" value="D" onclick="onKeyTap('D')" />
+            <input class="kb-key" type="button" value="F" onclick="onKeyTap('F')" />
+            <input class="kb-key" type="button" value="G" onclick="onKeyTap('G')" />
+            <input class="kb-key" type="button" value="H" onclick="onKeyTap('H')" />
+            <input class="kb-key" type="button" value="J" onclick="onKeyTap('J')" />
+            <input class="kb-key" type="button" value="K" onclick="onKeyTap('K')" />
+            <input class="kb-key" type="button" value="L" onclick="onKeyTap('L')" />
+          </div>
+          <div class="kb-row">
+            <input class="kb-key" type="button" value="Z" onclick="onKeyTap('Z')" />
+            <input class="kb-key" type="button" value="X" onclick="onKeyTap('X')" />
+            <input class="kb-key" type="button" value="C" onclick="onKeyTap('C')" />
+            <input class="kb-key" type="button" value="V" onclick="onKeyTap('V')" />
+            <input class="kb-key" type="button" value="B" onclick="onKeyTap('B')" />
+            <input class="kb-key" type="button" value="N" onclick="onKeyTap('N')" />
+            <input class="kb-key" type="button" value="M" onclick="onKeyTap('M')" />
+          </div>
+          <div class="kb-row">
+            <input class="kb-key-wide" type="button" value="退格" onclick="onKeyTap('DEL')" />
+            <input class="kb-key-wide" type="button" value="清空" onclick="onKeyTap('CLR')" />
+            <input class="kb-key-ok" type="button" value="确定" onclick="onKeyTap('OK')" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import router from "@system.router"
+import storage from "@system.storage"
+import { getExpress } from "../../common/services"
+import { getThemeSync, initTheme, setTheme } from "../../common/theme"
+
+function pad(value) {
+  return value < 10 ? "0" + value : "" + value
+}
+
+var SAVED_LIST_KEY = "infoExpressSaved"
+
+export default {
+  private: {
+    isDark: false,
+    themeButtonText: "深色模式",
+    modeLabel: "浅色",
+    currentTime: "--:--",
+    trackingNo: "",
+    expressLoading: false,
+    expressStateText: "",
+    hasError: false,
+    errorText: "",
+    showKeyboard: false,
+    savedList: [],
+    allDetails: [],
+    currentPage: 1,
+    pageSize: 8,
+    totalPages: 1,
+    expressInfo: {
+      title: "请输入快递单号",
+      subtitle: "",
+      message: "请在下方输入框输入快递运单号进行查询",
+      status: "",
+      details: []
+    }
+  },
+
+  onInit() {
+    var self = this
+    initTheme(function (isDark) {
+      self.isDark = isDark
+      self.themeButtonText = isDark ? "浅色模式" : "深色模式"
+      self.modeLabel = isDark ? "深色" : "浅色"
+    })
+    this.updateClock()
+    this.loadSavedList()
+  },
+
+  onShow() {
+    this.updateClock()
+  },
+
+  updateClock() {
+    var now = new Date()
+    this.currentTime = pad(now.getHours()) + ":" + pad(now.getMinutes())
+  },
+
+  toggleTheme() {
+    this.isDark = !this.isDark
+    this.themeButtonText = this.isDark ? "浅色模式" : "深色模式"
+    this.modeLabel = this.isDark ? "深色" : "浅色"
+    setTheme(this.isDark)
+  },
+
+  goHome() {
+    router.push({ uri: "pages/index" })
+  },
+
+  goNews() {
+    router.back()
+  },
+
+  goWeather() {
+    router.push({ uri: "pages/weather" })
+  },
+
+  toggleKeyboard() {
+    this.showKeyboard = !this.showKeyboard
+  },
+
+  onKeyTap(key) {
+    if (key === "DEL") {
+      if (this.trackingNo.length > 0) {
+        this.trackingNo = this.trackingNo.substring(0, this.trackingNo.length - 1)
+      }
+    } else if (key === "CLR") {
+      this.trackingNo = ""
+    } else if (key === "OK") {
+      this.showKeyboard = false
+    } else {
+      this.trackingNo += key
+    }
+  },
+
+  queryExpress() {
+    var trackingNo = this.trackingNo.trim()
+    if (!trackingNo) {
+      this.expressInfo = {
+        title: "请输入快递单号",
+        subtitle: "",
+        message: "请在下方输入框输入快递运单号进行查询",
+        status: "",
+        details: []
+      }
+      this.allDetails = []
+      this.currentPage = 1
+      this.totalPages = 1
+      return
+    }
+
+    this.showKeyboard = false
+    this.expressLoading = true
+    this.expressStateText = "正在查询快递信息"
+
+    getExpress(trackingNo).then((info) => {
+      this.allDetails = info.details || []
+      this.totalPages = Math.max(1, Math.ceil(this.allDetails.length / this.pageSize))
+      this.currentPage = 1
+      this.updatePageDetails(info)
+      this.expressLoading = false
+      this.saveToList(trackingNo)
+    }).catch((err) => {
+      this.expressLoading = false
+      this.hasError = true
+      this.errorText = "快递查询失败: " + err.message
+    })
+  },
+
+  updatePageDetails(baseInfo) {
+    var start = (this.currentPage - 1) * this.pageSize
+    var end = start + this.pageSize
+    var pageDetails = this.allDetails.slice(start, end)
+    this.expressInfo = {
+      title: baseInfo.title,
+      subtitle: baseInfo.subtitle,
+      message: baseInfo.message,
+      status: baseInfo.status,
+      details: pageDetails
+    }
+  },
+
+  prevPage() {
+    if (this.currentPage > 1) {
+      this.currentPage--
+      this.updatePageDetails(this.expressInfo)
+    }
+  },
+
+  nextPage() {
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++
+      this.updatePageDetails(this.expressInfo)
+    }
+  },
+
+  loadSavedList() {
+    var self = this
+    storage.get({
+      key: SAVED_LIST_KEY,
+      success: function (data) {
+        try {
+          self.savedList = JSON.parse(data) || []
+        } catch (e) {
+          self.savedList = []
+        }
+      },
+      fail: function () {
+        self.savedList = []
+      }
+    })
+  },
+
+  saveToList(trackingNo) {
+    if (!trackingNo) return
+    var list = this.savedList.filter(function (item) { return item !== trackingNo })
+    list.unshift(trackingNo)
+    if (list.length > 10) list = list.slice(0, 10)
+    this.savedList = list
+    storage.set({
+      key: SAVED_LIST_KEY,
+      value: JSON.stringify(list)
+    })
+  },
+
+  removeSaved(index) {
+    var list = this.savedList.filter(function (_, i) { return i !== index })
+    this.savedList = list
+    storage.set({
+      key: SAVED_LIST_KEY,
+      value: JSON.stringify(list)
+    })
+  },
+
+  loadSaved(item) {
+    this.trackingNo = item
+    this.queryExpress()
+  }
+}
+</script>
+
+<style>
+text {
+  color: #172026;
+  font-size: 20px;
+  line-height: 26px;
+}
+
+.page {
+  width: 800px;
+  height: 600px;
+  flex-direction: row;
+}
+
+.page-light {
+  background-color: #f2f5f6;
+}
+
+.main-panel-light {
+  background-color: #f2f5f6;
+}
+
+.side-bar-light,
+.card-light {
+  background-color: #ffffff;
+}
+
+.text-light {
+  color: #172026;
+}
+
+.text-light-sub {
+  color: #627279;
+}
+
+.side-bar {
+  width: 224px;
+  height: 600px;
+  padding: 24px 20px;
+  flex-direction: column;
+}
+
+.brand-block {
+  height: 150px;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.brand-en {
+  font-size: 17px;
+  color: #0074ff;
+}
+
+.brand-title {
+  margin-top: 10px;
+  height: 60px;
+  line-height: 60px;
+  font-size: 34px;
+  font-weight: bold;
+}
+
+.time-block {
+  height: 130px;
+  margin-top: 8px;
+  padding-top: 8px;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.time-text {
+  height: 66px;
+  line-height: 66px;
+  font-size: 42px;
+  font-weight: bold;
+}
+
+.mode-text {
+  margin-top: 6px;
+  font-size: 18px;
+}
+
+.nav-block {
+  height: 240px;
+  margin-top: 18px;
+  flex-direction: column;
+}
+
+.nav-button {
+  width: 184px;
+  height: 46px;
+  margin-bottom: 14px;
+  border-radius: 6px;
+  background-color: #e8eef0;
+  color: #172026;
+  font-size: 22px;
+  font-weight: bold;
+}
+
+.btn-light {
+  background-color: #e8eef0;
+  color: #172026;
+}
+
+.nav-button-active {
+  background-color: #0074ff;
+  color: #ffffff;
+}
+
+.theme-btn-light {
+  background-color: #e6f1ff;
+  color: #0057bf;
+}
+
+.theme-button {
+  width: 184px;
+  height: 42px;
+  border-radius: 6px;
+  font-size: 19px;
+  font-weight: bold;
+}
+
+.main-panel {
+  width: 576px;
+  height: 600px;
+  padding: 24px 24px;
+  flex-direction: column;
+}
+
+.express-panel {
+  flex: 1;
+  margin-top: 18px;
+  padding: 18px;
+  border-radius: 8px;
+  flex-direction: column;
+}
+
+.express-input-row {
+  height: 50px;
+  flex-direction: row;
+  align-items: center;
+}
+
+.express-input {
+  width: 428px;
+  height: 44px;
+  padding: 0 12px;
+  border-radius: 6px;
+  justify-content: center;
+}
+
+.express-input-text {
+  font-size: 21px;
+  color: #172026;
+}
+
+.express-input-text-dark {
+  font-size: 21px;
+  color: #edf4f4;
+}
+
+.express-input-placeholder {
+  font-size: 21px;
+  color: #999999;
+}
+
+.express-query-btn {
+  width: 100px;
+  height: 44px;
+  margin-left: 12px;
+  border-radius: 6px;
+  background-color: #0074ff;
+  color: #ffffff;
+  font-size: 21px;
+  font-weight: bold;
+}
+
+.express-loading {
+  height: 380px;
+  justify-content: center;
+  align-items: center;
+}
+
+.express-scroll {
+  flex: 1;
+  flex-direction: column;
+}
+
+.input-light {
+  background-color: #f0f4f5;
+  color: #172026;
+}
+
+.input-dark {
+  background-color: #2a2a2a;
+  color: #edf4f4;
+}
+
+.express-info-row {
+  flex-direction: row;
+  align-items: center;
+  height: 36px;
+}
+
+.express-tracking {
+  font-size: 21px;
+  font-weight: bold;
+}
+
+.express-sep {
+  font-size: 19px;
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
+.express-cp {
+  font-size: 19px;
+}
+
+.express-status {
+  font-size: 16px;
+  color: #0074ff;
+  font-weight: bold;
+}
+
+.express-msg {
+  margin-top: 8px;
+  font-size: 19px;
+  line-height: 26px;
+}
+
+.timeline {
+  margin-top: 14px;
+  flex-direction: column;
+}
+
+.timeline-item {
+  flex-direction: row;
+}
+
+.timeline-left {
+  width: 20px;
+  flex-direction: column;
+  align-items: center;
+}
+
+.timeline-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 5px;
+  background-color: #0074ff;
+  margin-top: 5px;
+}
+
+.timeline-line {
+  width: 2px;
+  flex: 1;
+  background-color: #d0d8dc;
+  margin-top: 4px;
+}
+
+.timeline-right {
+  flex: 1;
+  flex-direction: column;
+  padding-left: 10px;
+  padding-bottom: 6px;
+}
+
+.timeline-time {
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+
+.timeline-text {
+  font-size: 16px;
+  line-height: 24px;
+}
+
+.pagination {
+  height: 44px;
+  margin-top: 12px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+}
+
+.page-btn {
+  width: 80px;
+  height: 32px;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.page-info {
+  font-size: 16px;
+  margin-left: 16px;
+  margin-right: 16px;
+}
+
+.saved-section {
+  margin-top: 10px;
+  flex-direction: column;
+}
+
+.saved-title {
+  font-size: 15px;
+  margin-bottom: 6px;
+}
+
+.saved-list {
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.saved-item {
+  height: 30px;
+  padding: 0 10px;
+  margin-right: 8px;
+  margin-bottom: 6px;
+  border-radius: 15px;
+  background-color: #e8eef0;
+  flex-direction: row;
+  align-items: center;
+}
+
+.saved-item-dark {
+  background-color: #2a2a2a;
+}
+
+.saved-text {
+  font-size: 15px;
+}
+
+.saved-del {
+  font-size: 16px;
+  color: #999999;
+  margin-left: 6px;
+}
+
+.state-text {
+  font-size: 22px;
+}
+
+.state-box {
+  height: 420px;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+.state-title {
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.error-title {
+  color: #9e3f3f;
+}
+
+.keyboard {
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  padding: 10px 12px;
+  margin-top: 12px;
+  border-radius: 8px;
+  background-color: #eef2f4;
+}
+
+.kb-row {
+  height: 38px;
+  margin-bottom: 4px;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
+
+.kb-key {
+  width: 38px;
+  height: 34px;
+  margin: 0 2px;
+  border-radius: 5px;
+  background-color: #e8eef0;
+  color: #172026;
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.kb-key-wide {
+  width: 72px;
+  height: 34px;
+  margin: 0 2px;
+  border-radius: 5px;
+  background-color: #d0d8dc;
+  color: #172026;
+  font-size: 15px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.kb-key-ok {
+  width: 72px;
+  height: 34px;
+  margin: 0 2px;
+  border-radius: 5px;
+  background-color: #0074ff;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.keyboard-dark .kb-key {
+  background-color: #2a2a2a;
+  color: #edf4f4;
+}
+
+.keyboard-dark .kb-key-wide {
+  background-color: #333333;
+  color: #edf4f4;
+}
+
+.keyboard-dark {
+  background-color: #1e1e1e;
+}
+
+.page-dark {
+  background-color: #000000;
+}
+
+.main-panel-dark {
+  background-color: #202020;
+}
+
+.side-bar-dark,
+.card-dark {
+  background-color: #171717;
+}
+
+.text-dark {
+  color: #edf4f4;
+}
+
+.text-dark-sub {
+  color: #aebdc2;
+}
+
+.btn-dark {
+  background-color: #262626;
+  color: #edf4f4;
+}
+
+.theme-btn-dark {
+  background-color: #1a2c40;
+  color: #6fb2ff;
+}
+</style>

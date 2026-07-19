@@ -1,0 +1,602 @@
+<template>
+  <div class="page {{ isDark ? 'page-dark' : 'page-light' }}">
+    <div class="side-bar {{ isDark ? 'side-bar-dark' : 'side-bar-light' }}">
+      <div class="brand-block">
+        <text class="brand-en">INFOPLAT</text>
+        <text class="brand-title {{ isDark ? 'text-dark' : 'text-light' }}">信息台</text>
+      </div>
+
+      <div class="time-block">
+        <text class="time-text {{ isDark ? 'text-dark' : 'text-light' }}">{{ currentTime }}</text>
+        <text class="mode-text {{ isDark ? 'text-dark-sub' : 'text-light-sub' }}">{{ modeLabel }}</text>
+      </div>
+
+      <div class="nav-block">
+        <input class="nav-button {{ isDark ? 'btn-dark' : 'btn-light' }}" type="button" value="首页" onclick="goHome" />
+        <input class="nav-button nav-button-active" type="button" value="新闻" />
+        <input class="nav-button {{ isDark ? 'btn-dark' : 'btn-light' }}" type="button" value="天气" onclick="goWeather" />
+        <input class="nav-button {{ isDark ? 'btn-dark' : 'btn-light' }}" type="button" value="快递" onclick="goExpress" />
+      </div>
+
+      <input class="theme-button {{ isDark ? 'theme-btn-dark' : 'theme-btn-light' }}" type="button" value="{{ themeButtonText }}" onclick="toggleTheme" />
+    </div>
+
+    <div class="main-panel {{ isDark ? 'main-panel-dark' : 'main-panel-light' }}">
+      <!-- 新闻内容视图 -->
+      <div class="news-view" if="{{ !showCategoryPicker }}">
+        <div class="action-row">
+          <input class="category-select-btn {{ isDark ? 'btn-dark' : 'btn-light' }}" type="button" value="{{ categoryLabel }}" onclick="openCategoryPicker" />
+          <input class="refresh-button" type="button" value="刷新" onclick="reloadNews" />
+        </div>
+
+        <div class="state-box" if="{{ loading }}">
+          <text class="state-title {{ isDark ? 'text-dark' : 'text-light' }}">正在加载</text>
+          <text class="state-text {{ isDark ? 'text-dark-sub' : 'text-light-sub' }}">{{ stateText }}</text>
+        </div>
+
+        <div class="state-box" if="{{ hasError }}">
+          <text class="state-title error-title">加载失败</text>
+          <text class="state-text {{ isDark ? 'text-dark-sub' : 'text-light-sub' }}">{{ errorText }}</text>
+        </div>
+
+        <scroll class="news-panel" scroll-y="true" bounces="true" if="{{ !loading &amp;&amp; !hasError }}">
+          <div class="lead-news {{ isDark ? 'card-dark' : 'card-light' }}" onclick="showDetail(leadNews)">
+            <text class="lead-title {{ isDark ? 'text-dark' : 'text-light' }}">{{ leadNews.title }}</text>
+            <text class="lead-desc {{ isDark ? 'text-dark-sub' : 'text-light-sub' }}">{{ leadNews.description }}</text>
+            <text class="lead-source {{ isDark ? 'text-dark-sub' : 'text-light-sub' }}">{{ leadNews.source }} {{ leadNews.published }}</text>
+          </div>
+          <div class="news-grid">
+            <div class="news-item {{ isDark ? 'card-dark' : 'card-light' }}" for="{{ newsList }}" onclick="showDetail($item)">
+              <text class="news-item-title {{ isDark ? 'text-dark' : 'text-light' }}">{{ $item.title }}</text>
+              <text class="news-item-desc {{ isDark ? 'text-dark-sub' : 'text-light-sub' }}">{{ $item.description }}</text>
+              <text class="news-item-source {{ isDark ? 'text-dark-sub' : 'text-light-sub' }}">{{ $item.source }}</text>
+            </div>
+          </div>
+        </scroll>
+      </div>
+
+      <!-- 类别选择视图 -->
+      <div class="picker-view" if="{{ showCategoryPicker }}">
+        <div class="picker-header">
+          <input class="picker-back-btn {{ isDark ? 'btn-dark' : 'btn-light' }}" type="button" value="关闭" onclick="closeCategoryPicker" />
+          <text class="picker-title {{ isDark ? 'text-dark' : 'text-light' }}">选择新闻类别</text>
+        </div>
+
+        <div class="picker-body">
+          <div class="picker-list">
+            <div class="picker-row">
+              <input class="picker-btn {{ isDark ? 'picker-btn-dark' : '' }}" type="button" value="综合热点" onclick="selectCategory('politics', '综合热点')" />
+              <input class="picker-btn {{ isDark ? 'picker-btn-dark' : '' }}" type="button" value="国际新闻" onclick="selectCategory('world', '国际新闻')" />
+            </div>
+            <div class="picker-row">
+              <input class="picker-btn {{ isDark ? 'picker-btn-dark' : '' }}" type="button" value="科技新闻" onclick="selectCategory('tech', '科技新闻')" />
+              <input class="picker-btn {{ isDark ? 'picker-btn-dark' : '' }}" type="button" value="财经新闻" onclick="selectCategory('business', '财经新闻')" />
+            </div>
+            <div class="picker-row">
+              <input class="picker-btn {{ isDark ? 'picker-btn-dark' : '' }}" type="button" value="体育新闻" onclick="selectCategory('sports', '体育新闻')" />
+              <input class="picker-btn {{ isDark ? 'picker-btn-dark' : '' }}" type="button" value="娱乐新闻" onclick="selectCategory('entertainment', '娱乐新闻')" />
+            </div>
+            <div class="picker-row">
+              <input class="picker-btn {{ isDark ? 'picker-btn-dark' : '' }}" type="button" value="科学新闻" onclick="selectCategory('science', '科学新闻')" />
+              <input class="picker-btn {{ isDark ? 'picker-btn-dark' : '' }}" type="button" value="健康新闻" onclick="selectCategory('health', '健康新闻')" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import router from "@system.router"
+import { getLatestNews } from "../../common/services"
+import { getThemeSync, initTheme, setTheme } from "../../common/theme"
+import { getCached, setCache } from "../../common/cache"
+
+function pad(value) {
+  return value < 10 ? "0" + value : "" + value
+}
+
+function emptyNews() {
+  return {
+    title: "暂无新闻",
+    description: "请检查网络连接或 CurrentsAPI key。",
+    source: "Currents",
+    category: "综合",
+    published: ""
+  }
+}
+
+export default {
+  private: {
+    isDark: false,
+    themeButtonText: "深色模式",
+    modeLabel: "浅色",
+    currentTime: "--:--",
+    activeCategory: "politics",
+    categoryLabel: "综合热点",
+    showCategoryPicker: false,
+    showNewsContent: false,
+    loading: false,
+    hasError: false,
+    stateText: "",
+    errorText: "",
+    leadNews: emptyNews(),
+    newsList: []
+  },
+
+  onInit() {
+    var self = this
+    initTheme(function (isDark) {
+      self.isDark = isDark
+      self.themeButtonText = isDark ? "浅色模式" : "深色模式"
+      self.modeLabel = isDark ? "深色" : "浅色"
+    })
+    this.updateClock()
+  },
+
+  onShow() {
+    this.loadNewsPolitics()
+    this.updateClock()
+  },
+
+  updateClock() {
+    var now = new Date()
+    this.currentTime = pad(now.getHours()) + ":" + pad(now.getMinutes())
+  },
+
+  toggleTheme() {
+    this.isDark = !this.isDark
+    this.themeButtonText = this.isDark ? "浅色模式" : "深色模式"
+    this.modeLabel = this.isDark ? "深色" : "浅色"
+    setTheme(this.isDark)
+  },
+
+  goHome() {
+    router.push({ uri: "pages/index" })
+  },
+
+  goWeather() {
+    router.push({ uri: "pages/weather" })
+  },
+
+  goExpress() {
+    router.push({ uri: "pages/express" })
+  },
+
+  showDetail(item) {
+    if (!item || !item.title) return
+    router.push({
+      uri: "pages/detail",
+      params: {
+        title: item.title,
+        description: item.description,
+        source: item.source,
+        url: item.url,
+        isDark: this.isDark
+      }
+    })
+  },
+
+  openCategoryPicker() {
+    this.showCategoryPicker = true
+  },
+
+  closeCategoryPicker() {
+    this.showCategoryPicker = false
+  },
+
+  selectCategory(category, label) {
+    this.activeCategory = category
+    this.categoryLabel = label
+    this.showCategoryPicker = false
+    this.loadNewsByCategory(category)
+  },
+
+  loadNewsByCategory(category) {
+    var categoryMap = {
+      "politics": ["politics"],
+      "world": ["world"],
+      "tech": ["technology"],
+      "business": ["business", "finance"],
+      "sports": ["sports"],
+      "entertainment": ["entertainment"],
+      "science": ["science"],
+      "health": ["health"]
+    }
+    var categories = categoryMap[category] || ["politics"]
+    this.loadNews(categories)
+  },
+
+  reloadNews() {
+    this.loadNewsByCategory(this.activeCategory)
+  },
+
+  loadNewsPolitics() {
+    this.activeCategory = "politics"
+    this.categoryLabel = "综合热点"
+    this.loadNews(["politics"])
+  },
+
+  loadNews(categories) {
+    var cacheKey = "news_" + categories.join(",")
+    var cached = getCached(cacheKey)
+    if (cached) {
+      this.newsList = cached.length > 1 ? cached.slice(1) : []
+      this.leadNews = cached.length ? cached[0] : emptyNews()
+      this.loading = false
+      this.hasError = false
+      this.showNewsContent = true
+      return
+    }
+
+    this.loading = true
+    this.hasError = false
+    this.showNewsContent = false
+    this.stateText = "正在请求新闻"
+    getLatestNews({
+      categories: categories,
+      pageSize: 20
+    })
+      .then((list) => {
+        setCache(cacheKey, list, 5 * 60 * 1000)
+        this.newsList = list.length > 1 ? list.slice(1) : []
+        this.leadNews = list.length ? list[0] : emptyNews()
+        this.loading = false
+        this.hasError = false
+        this.showNewsContent = true
+      })
+      .catch((err) => {
+        this.loading = false
+        this.hasError = true
+        this.errorText = "新闻获取失败: " + err.message
+      })
+  }
+}
+</script>
+
+<style>
+text {
+  color: #172026;
+  font-size: 20px;
+  line-height: 26px;
+}
+
+.page {
+  width: 800px;
+  height: 600px;
+  flex-direction: row;
+}
+
+.page-light {
+  background-color: #f2f5f6;
+}
+
+.main-panel-light {
+  background-color: #f2f5f6;
+}
+
+.side-bar-light,
+.card-light {
+  background-color: #ffffff;
+}
+
+.text-light {
+  color: #172026;
+}
+
+.text-light-sub {
+  color: #627279;
+}
+
+.side-bar {
+  width: 224px;
+  height: 600px;
+  padding: 24px 20px;
+  flex-direction: column;
+}
+
+.brand-block {
+  height: 150px;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.brand-en {
+  font-size: 17px;
+  color: #0074ff;
+}
+
+.brand-title {
+  margin-top: 10px;
+  height: 60px;
+  line-height: 60px;
+  font-size: 34px;
+  font-weight: bold;
+}
+
+.time-block {
+  height: 130px;
+  margin-top: 8px;
+  padding-top: 8px;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.time-text {
+  height: 66px;
+  line-height: 66px;
+  font-size: 42px;
+  font-weight: bold;
+}
+
+.mode-text {
+  margin-top: 6px;
+  font-size: 18px;
+}
+
+.nav-block {
+  height: 240px;
+  margin-top: 18px;
+  flex-direction: column;
+}
+
+.nav-button {
+  width: 184px;
+  height: 46px;
+  margin-bottom: 14px;
+  border-radius: 6px;
+  background-color: #e8eef0;
+  color: #172026;
+  font-size: 22px;
+  font-weight: bold;
+}
+
+.btn-light {
+  background-color: #e8eef0;
+  color: #172026;
+}
+
+.nav-button-active {
+  background-color: #0074ff;
+  color: #ffffff;
+}
+
+.theme-btn-light {
+  background-color: #e6f1ff;
+  color: #0057bf;
+}
+
+.theme-button {
+  width: 184px;
+  height: 42px;
+  border-radius: 6px;
+  font-size: 19px;
+  font-weight: bold;
+}
+
+.main-panel {
+  width: 576px;
+  height: 600px;
+  padding: 24px 24px;
+  flex-direction: column;
+}
+
+/* 新闻内容视图 */
+.news-view {
+  flex: 1;
+  flex-direction: column;
+}
+
+.action-row {
+  height: 44px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.category-select-btn {
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 6px;
+  font-size: 22px;
+  font-weight: bold;
+}
+
+.refresh-button {
+  width: 82px;
+  height: 40px;
+  border-radius: 6px;
+  background-color: #0074ff;
+  color: #ffffff;
+  font-size: 19px;
+  font-weight: bold;
+}
+
+.state-box {
+  flex: 1;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+.state-title {
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.state-text {
+  width: 430px;
+  margin-top: 12px;
+  font-size: 22px;
+  text-align: center;
+}
+
+.error-title {
+  color: #9e3f3f;
+}
+
+.news-panel {
+  flex: 1;
+  margin-top: 18px;
+  flex-direction: column;
+}
+
+.lead-news {
+  height: 188px;
+  padding: 18px;
+  border-radius: 8px;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.lead-title {
+  font-size: 25px;
+  line-height: 32px;
+  font-weight: bold;
+  lines: 2;
+  text-overflow: ellipsis;
+}
+
+.lead-desc {
+  font-size: 19px;
+  line-height: 26px;
+  lines: 2;
+  text-overflow: ellipsis;
+}
+
+.lead-source {
+  width: 492px;
+  font-size: 15px;
+  lines: 1;
+  text-overflow: ellipsis;
+  color: #999999;
+}
+
+.news-grid {
+  margin-top: 14px;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.news-item {
+  width: 257px;
+  height: 130px;
+  margin-bottom: 14px;
+  padding: 12px;
+  border-radius: 8px;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.news-item-title {
+  font-size: 19px;
+  line-height: 26px;
+  font-weight: bold;
+  lines: 2;
+  text-overflow: ellipsis;
+}
+
+.news-item-desc {
+  font-size: 15px;
+  line-height: 22px;
+  lines: 2;
+  text-overflow: ellipsis;
+}
+
+.news-item-source {
+  width: 233px;
+  font-size: 14px;
+  lines: 1;
+  text-overflow: ellipsis;
+  color: #999999;
+}
+
+/* 类别选择视图 */
+.picker-view {
+  flex: 1;
+  flex-direction: column;
+}
+
+.picker-header {
+  height: 48px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.picker-back-btn {
+  width: 80px;
+  height: 36px;
+  border-radius: 6px;
+  font-size: 15px;
+}
+
+.picker-title {
+  font-size: 22px;
+  font-weight: bold;
+}
+
+.picker-body {
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.picker-list {
+  flex-direction: column;
+}
+
+.picker-row {
+  flex-direction: row;
+  margin-bottom: 12px;
+  justify-content: space-between;
+}
+
+.picker-btn {
+  width: 248px;
+  height: 50px;
+  border-radius: 8px;
+  background-color: #f0f4f5;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.picker-btn-dark {
+  background-color: #2a2a2a;
+  color: #edf4f4;
+}
+
+/* 深色模式 */
+.page-dark {
+  background-color: #000000;
+}
+
+.main-panel-dark {
+  background-color: #202020;
+}
+
+.side-bar-dark,
+.card-dark {
+  background-color: #171717;
+}
+
+.text-dark {
+  color: #edf4f4;
+}
+
+.text-dark-sub {
+  color: #aebdc2;
+}
+
+.btn-dark {
+  background-color: #262626;
+  color: #edf4f4;
+}
+
+.theme-btn-dark {
+  background-color: #1a2c40;
+  color: #6fb2ff;
+}
+</style>
