@@ -1,5 +1,5 @@
 {
-  "package": "com.infoplat.quickapp",
+  "package": "com.flux.infoplat",
   "name": "信息台InfoPlat",
   "versionName": "1.0.0",
   "versionCode": 1,
@@ -28,7 +28,7 @@
   ],
   "config": {
     "logLevel": "log",
-    "designWidth": "device-width"
+    "designWidth": 320
   },
   "router": {
     "entry": "pages/index",
