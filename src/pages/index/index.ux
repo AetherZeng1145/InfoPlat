@@ -1,21 +1,13 @@
 <template>
   <div class="page {{ isDark ? 'page-dark' : 'page-light' }}">
-    <div class="top-nav {{ isDark ? 'top-nav-dark' : 'top-nav-light' }}">
-      <div class="brand-block">
-        <text class="brand-en">INFOPLAT</text>
-        <text class="brand-title {{ isDark ? 'text-dark' : 'text-light' }}">信息台</text>
-      </div>
-      <div class="nav-buttons">
-        <input class="nav-button nav-button-active" type="button" value="首页" />
-        <input class="nav-button {{ isDark ? 'btn-dark' : 'btn-light' }}" type="button" value="新闻" onclick="goNews" />
-        <input class="nav-button {{ isDark ? 'btn-dark' : 'btn-light' }}" type="button" value="天气" onclick="goWeather" />
-        <input class="nav-button {{ isDark ? 'btn-dark' : 'btn-light' }}" type="button" value="快递" onclick="goExpress" />
-        <input class="theme-button {{ isDark ? 'theme-btn-dark' : 'theme-btn-light' }}" type="button" value="{{ themeButtonText }}" onclick="toggleTheme" />
-      </div>
-    </div>
-
     <div class="content-area {{ isDark ? 'main-panel-dark' : 'main-panel-light' }}">
       <scroll class="main-scroll" scroll-y="true" bounces="true">
+        <!-- 品牌信息 -->
+        <div class="brand-header">
+          <text class="brand-en">INFOPLAT</text>
+          <text class="brand-title {{ isDark ? 'text-dark' : 'text-light' }}">信息台</text>
+        </div>
+
         <!-- 大号时钟 -->
         <div class="hero-clock">
           <text class="hero-time {{ isDark ? 'text-dark' : 'text-light' }}">{{ currentTime }}</text>
@@ -49,6 +41,14 @@
           </div>
         </div>
       </scroll>
+    </div>
+
+    <div class="bottom-nav {{ isDark ? 'bottom-nav-dark' : 'bottom-nav-light' }}">
+      <input class="nav-button nav-button-active" type="button" value="首页" />
+      <input class="nav-button {{ isDark ? 'btn-dark' : 'btn-light' }}" type="button" value="新闻" onclick="goNews" />
+      <input class="nav-button {{ isDark ? 'btn-dark' : 'btn-light' }}" type="button" value="天气" onclick="goWeather" />
+      <input class="nav-button {{ isDark ? 'btn-dark' : 'btn-light' }}" type="button" value="快递" onclick="goExpress" />
+      <input class="theme-button {{ isDark ? 'theme-btn-dark' : 'theme-btn-light' }}" type="button" value="{{ themeButtonText }}" onclick="toggleTheme" />
     </div>
   </div>
 </template>
@@ -249,56 +249,73 @@ text {
   background-color: #000000;
 }
 
-/* ========== 顶部导航栏 ========== */
-.top-nav {
+/* ========== 主内容区 ========== */
+.content-area {
   width: 320px;
-  height: 45px;
-  padding: 5px 10px;
+  height: 200px;
+  padding: 8px 15px;
+  flex-direction: column;
+}
+
+.main-scroll {
+  height: 184px;
+  flex-direction: column;
+}
+
+.main-panel-light {
+  background: linear-gradient(180deg, #e8f4fd 0%, #f2f5f6 100%);
+}
+
+.main-panel-dark {
+  background: linear-gradient(180deg, #0a1628 0%, #202020 100%);
+}
+
+/* ========== 品牌信息 ========== */
+.brand-header {
   flex-direction: row;
   align-items: center;
-  justify-content: space-between;
-}
-
-.top-nav-light {
-  background-color: #ffffff;
-  border-bottom: 1px solid #e0e0e0;
-}
-
-.top-nav-dark {
-  background-color: #171717;
-  border-bottom: 1px solid #333333;
-}
-
-.brand-block {
-  flex-direction: column;
-  justify-content: center;
+  margin-bottom: 5px;
 }
 
 .brand-en {
   font-size: 10px;
   color: #0074ff;
   font-weight: bold;
+  margin-right: 8px;
 }
 
 .brand-title {
-  margin-top: 2px;
   font-size: 14px;
   font-weight: bold;
 }
 
-.nav-buttons {
+/* ========== 底部导航栏 ========== */
+.bottom-nav {
+  width: 320px;
+  height: 40px;
+  padding: 5px 10px;
   flex-direction: row;
   align-items: center;
+  justify-content: space-between;
+}
+
+.bottom-nav-light {
+  background-color: #ffffff;
+  border-top: 1px solid #e0e0e0;
+}
+
+.bottom-nav-dark {
+  background-color: #171717;
+  border-top: 1px solid #333333;
 }
 
 .nav-button {
-  width: 45px;
-  height: 26px;
-  margin-left: 5px;
+  width: 50px;
+  height: 28px;
   border-radius: 4px;
   background-color: #e8eef0;
   color: #172026;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: bold;
 }
 
@@ -308,11 +325,10 @@ text {
 }
 
 .theme-button {
-  width: 45px;
-  height: 26px;
-  margin-left: 5px;
+  width: 50px;
+  height: 28px;
   border-radius: 4px;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: bold;
 }
 
@@ -326,30 +342,9 @@ text {
   color: #6fb2ff;
 }
 
-/* ========== 主内容区 ========== */
-.content-area {
-  width: 320px;
-  height: 195px;
-  padding: 10px 15px;
-  flex-direction: column;
-}
-
-.main-scroll {
-  height: 175px;
-  flex-direction: column;
-}
-
-.main-panel-light {
-  background: linear-gradient(180deg, #e8f4fd 0%, #f2f5f6 100%);
-}
-
-.main-panel-dark {
-  background: linear-gradient(180deg, #0a1628 0%, #202020 100%);
-}
-
 /* ========== 时钟区 ========== */
 .hero-clock {
-  height: 65px;
+  height: 60px;
   flex-direction: column;
   justify-content: center;
   align-items: center;
@@ -370,7 +365,7 @@ text {
 /* ========== 天气摘要 ========== */
 .weather-bar {
   height: 24px;
-  margin-top: 8px;
+  margin-top: 6px;
   padding: 0 10px;
   border-radius: 4px;
   flex-direction: row;
@@ -384,15 +379,15 @@ text {
 
 /* ========== 通用卡片 ========== */
 .section-card {
-  margin-top: 8px;
-  padding: 8px 10px;
+  margin-top: 6px;
+  padding: 6px 10px;
   border-radius: 4px;
   flex-direction: column;
 }
 
 .section-label {
   font-size: 10px;
-  margin-bottom: 5px;
+  margin-bottom: 4px;
 }
 
 .card-light {
@@ -423,7 +418,7 @@ text {
 
 /* ========== 历史上的今天 ========== */
 .history-item {
-  margin-bottom: 5px;
+  margin-bottom: 4px;
   flex-direction: row;
   align-items: flex-start;
 }
@@ -447,7 +442,7 @@ text {
 }
 
 .history-desc {
-  margin-top: 3px;
+  margin-top: 2px;
   font-size: 10px;
   line-height: 13px;
 }
