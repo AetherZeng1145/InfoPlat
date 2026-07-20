@@ -15,10 +15,6 @@
     </div>
 
     <div class="content-area {{ isDark ? 'main-panel-dark' : 'main-panel-light' }}">
-      <div class="action-row">
-        <input class="refresh-button" type="button" value="查询" onclick="queryExpress" />
-      </div>
-
       <div class="express-panel {{ isDark ? 'card-dark' : 'card-light' }}">
         <div class="express-input-row">
           <div class="express-input {{ isDark ? 'input-dark' : 'input-light' }}" onclick="toggleKeyboard">
