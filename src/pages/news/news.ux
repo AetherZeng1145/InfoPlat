@@ -1,27 +1,20 @@
 <template>
   <div class="page {{ isDark ? 'page-dark' : 'page-light' }}">
-    <div class="side-bar {{ isDark ? 'side-bar-dark' : 'side-bar-light' }}">
+    <div class="top-nav {{ isDark ? 'top-nav-dark' : 'top-nav-light' }}">
       <div class="brand-block">
         <text class="brand-en">INFOPLAT</text>
         <text class="brand-title {{ isDark ? 'text-dark' : 'text-light' }}">信息台</text>
       </div>
-
-      <div class="time-block">
-        <text class="time-text {{ isDark ? 'text-dark' : 'text-light' }}">{{ currentTime }}</text>
-        <text class="mode-text {{ isDark ? 'text-dark-sub' : 'text-light-sub' }}">{{ modeLabel }}</text>
-      </div>
-
-      <div class="nav-block">
+      <div class="nav-buttons">
         <input class="nav-button {{ isDark ? 'btn-dark' : 'btn-light' }}" type="button" value="首页" onclick="goHome" />
         <input class="nav-button nav-button-active" type="button" value="新闻" />
         <input class="nav-button {{ isDark ? 'btn-dark' : 'btn-light' }}" type="button" value="天气" onclick="goWeather" />
         <input class="nav-button {{ isDark ? 'btn-dark' : 'btn-light' }}" type="button" value="快递" onclick="goExpress" />
+        <input class="theme-button {{ isDark ? 'theme-btn-dark' : 'theme-btn-light' }}" type="button" value="{{ themeButtonText }}" onclick="toggleTheme" />
       </div>
-
-      <input class="theme-button {{ isDark ? 'theme-btn-dark' : 'theme-btn-light' }}" type="button" value="{{ themeButtonText }}" onclick="toggleTheme" />
     </div>
 
-    <div class="main-panel {{ isDark ? 'main-panel-dark' : 'main-panel-light' }}">
+    <div class="content-area {{ isDark ? 'main-panel-dark' : 'main-panel-light' }}">
       <!-- 新闻内容视图 -->
       <div class="news-view" if="{{ !showCategoryPicker }}">
         <div class="action-row">
@@ -258,14 +251,14 @@ export default {
 <style>
 text {
   color: #172026;
-  font-size: 8px;
-  line-height: 10px;
+  font-size: 14px;
+  line-height: 18px;
 }
 
 .page {
   width: 320px;
   height: 240px;
-  flex-direction: row;
+  flex-direction: column;
 }
 
 .page-light {
@@ -276,7 +269,6 @@ text {
   background-color: #f2f5f6;
 }
 
-.side-bar-light,
 .card-light {
   background-color: #ffffff;
 }
@@ -289,66 +281,56 @@ text {
   color: #627279;
 }
 
-.side-bar {
-  width: 90px;
-  height: 240px;
-  padding: 10px 8px;
-  flex-direction: column;
+/* 顶部导航栏 */
+.top-nav {
+  width: 320px;
+  height: 45px;
+  padding: 5px 10px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.top-nav-light {
+  background-color: #ffffff;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.top-nav-dark {
+  background-color: #171717;
+  border-bottom: 1px solid #333333;
 }
 
 .brand-block {
-  height: 60px;
   flex-direction: column;
   justify-content: center;
 }
 
 .brand-en {
-  font-size: 7px;
+  font-size: 8px;
   color: #0074ff;
+  font-weight: bold;
 }
 
 .brand-title {
-  margin-top: 4px;
-  height: 24px;
-  line-height: 24px;
-  font-size: 14px;
-  font-weight: bold;
-}
-
-.time-block {
-  height: 52px;
-  margin-top: 3px;
-  padding-top: 3px;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.time-text {
-  height: 26px;
-  line-height: 26px;
-  font-size: 17px;
-  font-weight: bold;
-}
-
-.mode-text {
   margin-top: 2px;
-  font-size: 7px;
+  font-size: 13px;
+  font-weight: bold;
 }
 
-.nav-block {
-  height: 96px;
-  margin-top: 7px;
-  flex-direction: column;
+.nav-buttons {
+  flex-direction: row;
+  align-items: center;
 }
 
 .nav-button {
-  width: 74px;
-  height: 18px;
-  margin-bottom: 6px;
-  border-radius: 2px;
+  width: 48px;
+  height: 28px;
+  margin-left: 5px;
+  border-radius: 4px;
   background-color: #e8eef0;
   color: #172026;
-  font-size: 9px;
+  font-size: 12px;
   font-weight: bold;
 }
 
@@ -368,17 +350,18 @@ text {
 }
 
 .theme-button {
-  width: 74px;
-  height: 17px;
-  border-radius: 2px;
-  font-size: 8px;
+  width: 48px;
+  height: 28px;
+  margin-left: 5px;
+  border-radius: 4px;
+  font-size: 10px;
   font-weight: bold;
 }
 
-.main-panel {
-  width: 230px;
-  height: 240px;
-  padding: 10px 10px;
+.content-area {
+  width: 320px;
+  height: 195px;
+  padding: 8px 12px;
   flex-direction: column;
 }
 
@@ -389,46 +372,46 @@ text {
 }
 
 .action-row {
-  height: 18px;
+  height: 30px;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
 }
 
 .category-select-btn {
-  height: 16px;
-  padding: 0 6px;
-  border-radius: 2px;
-  font-size: 9px;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 4px;
+  font-size: 12px;
   font-weight: bold;
 }
 
 .refresh-button {
-  width: 33px;
-  height: 16px;
-  border-radius: 2px;
+  width: 50px;
+  height: 26px;
+  border-radius: 4px;
   background-color: #0074ff;
   color: #ffffff;
-  font-size: 8px;
+  font-size: 12px;
   font-weight: bold;
 }
 
 .state-box {
-  height: 168px;
+  height: 140px;
   justify-content: center;
   align-items: center;
   flex-direction: column;
 }
 
 .state-title {
-  font-size: 11px;
+  font-size: 14px;
   font-weight: bold;
 }
 
 .state-text {
-  width: 172px;
-  margin-top: 5px;
-  font-size: 9px;
+  width: 260px;
+  margin-top: 8px;
+  font-size: 12px;
   text-align: center;
 }
 
@@ -437,77 +420,77 @@ text {
 }
 
 .news-panel {
-  height: 190px;
-  margin-top: 7px;
+  height: 155px;
+  margin-top: 8px;
   flex-direction: column;
 }
 
 .lead-news {
-  height: 75px;
-  padding: 7px;
-  border-radius: 3px;
+  height: 90px;
+  padding: 10px;
+  border-radius: 5px;
   flex-direction: column;
   justify-content: space-between;
 }
 
 .lead-title {
-  font-size: 10px;
-  line-height: 13px;
+  font-size: 16px;
+  line-height: 20px;
   font-weight: bold;
   lines: 2;
   text-overflow: ellipsis;
 }
 
 .lead-desc {
-  font-size: 8px;
-  line-height: 10px;
+  font-size: 12px;
+  line-height: 15px;
   lines: 2;
   text-overflow: ellipsis;
 }
 
 .lead-source {
-  width: 197px;
-  font-size: 6px;
+  width: 280px;
+  font-size: 10px;
   lines: 1;
   text-overflow: ellipsis;
   color: #999999;
 }
 
 .news-grid {
-  margin-top: 6px;
+  margin-top: 8px;
   flex-direction: row;
   flex-wrap: wrap;
   justify-content: space-between;
 }
 
 .news-item {
-  width: 103px;
-  height: 52px;
-  margin-bottom: 6px;
-  padding: 5px;
-  border-radius: 3px;
+  width: 145px;
+  height: 65px;
+  margin-bottom: 8px;
+  padding: 8px;
+  border-radius: 5px;
   flex-direction: column;
   justify-content: space-between;
 }
 
 .news-item-title {
-  font-size: 8px;
-  line-height: 10px;
+  font-size: 12px;
+  line-height: 15px;
   font-weight: bold;
   lines: 2;
   text-overflow: ellipsis;
 }
 
 .news-item-desc {
-  font-size: 6px;
-  line-height: 9px;
+  font-size: 10px;
+  line-height: 13px;
   lines: 2;
   text-overflow: ellipsis;
 }
 
 .news-item-source {
-  width: 93px;
-  font-size: 6px;
+  width: 130px;
+  font-size: 9px;
   lines: 1;
   text-overflow: ellipsis;
   color: #999999;
@@ -520,21 +503,21 @@ text {
 }
 
 .picker-header {
-  height: 19px;
+  height: 30px;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
 }
 
 .picker-back-btn {
-  width: 32px;
-  height: 14px;
-  border-radius: 2px;
-  font-size: 6px;
+  width: 50px;
+  height: 26px;
+  border-radius: 4px;
+  font-size: 11px;
 }
 
 .picker-title {
-  font-size: 9px;
+  font-size: 14px;
   font-weight: bold;
 }
 
@@ -550,16 +533,16 @@ text {
 
 .picker-row {
   flex-direction: row;
-  margin-bottom: 5px;
+  margin-bottom: 8px;
   justify-content: space-between;
 }
 
 .picker-btn {
-  width: 99px;
-  height: 20px;
-  border-radius: 3px;
+  width: 145px;
+  height: 30px;
+  border-radius: 5px;
   background-color: #f0f4f5;
-  font-size: 7px;
+  font-size: 12px;
   font-weight: bold;
 }
 
@@ -577,7 +560,6 @@ text {
   background-color: #202020;
 }
 
-.side-bar-dark,
 .card-dark {
   background-color: #171717;
 }
