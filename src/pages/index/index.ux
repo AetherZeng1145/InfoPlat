@@ -369,10 +369,10 @@ text {
 
 /* ========== 天气摘要 ========== */
 .weather-bar {
-  height: 26px;
-  margin-top: 6px;
-  padding: 0 10px;
-  border-radius: 4px;
+  height: 30px;
+  margin-top: 8px;
+  padding: 0 12px;
+  border-radius: 5px;
   flex-direction: row;
   align-items: center;
 }
@@ -384,15 +384,15 @@ text {
 
 /* ========== 通用卡片 ========== */
 .section-card {
-  margin-top: 6px;
-  padding: 6px 10px;
-  border-radius: 4px;
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-radius: 5px;
   flex-direction: column;
 }
 
 .section-label {
   font-size: 11px;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 
 .card-light {
@@ -411,19 +411,19 @@ text {
 }
 
 .news-desc {
-  margin-top: 3px;
+  margin-top: 4px;
   font-size: 14px;
   line-height: 18px;
 }
 
 .news-meta {
-  margin-top: 4px;
+  margin-top: 5px;
   font-size: 11px;
 }
 
 /* ========== 历史上的今天 ========== */
 .history-item {
-  margin-bottom: 4px;
+  margin-bottom: 6px;
   flex-direction: row;
   align-items: flex-start;
 }
@@ -447,7 +447,7 @@ text {
 }
 
 .history-desc {
-  margin-top: 2px;
+  margin-top: 3px;
   font-size: 11px;
   line-height: 14px;
 }
