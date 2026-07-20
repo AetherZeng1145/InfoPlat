@@ -237,14 +237,14 @@ export default {
 <style>
 text {
   color: #172026;
-  font-size: 20px;
-  line-height: 26px;
+  font-size: 8px;
+  line-height: 10px;
 }
 
 /* ========== 页面框架 ========== */
 .page {
-  width: 800px;
-  height: 600px;
+  width: 320px;
+  height: 240px;
   flex-direction: row;
 }
 
@@ -258,9 +258,9 @@ text {
 
 /* ========== 侧边栏 ========== */
 .side-bar {
-  width: 224px;
-  height: 600px;
-  padding: 24px 20px;
+  width: 90px;
+  height: 240px;
+  padding: 10px 8px;
   flex-direction: column;
 }
 
@@ -273,58 +273,58 @@ text {
 }
 
 .brand-block {
-  height: 150px;
+  height: 60px;
   flex-direction: column;
   justify-content: center;
 }
 
 .brand-en {
-  font-size: 17px;
+  font-size: 7px;
   color: #0074ff;
 }
 
 .brand-title {
-  margin-top: 10px;
-  height: 60px;
-  line-height: 60px;
-  font-size: 34px;
+  margin-top: 4px;
+  height: 24px;
+  line-height: 24px;
+  font-size: 14px;
   font-weight: bold;
 }
 
 .time-block {
-  height: 130px;
-  margin-top: 8px;
-  padding-top: 8px;
+  height: 52px;
+  margin-top: 3px;
+  padding-top: 3px;
   flex-direction: column;
   justify-content: center;
 }
 
 .time-text {
-  height: 66px;
-  line-height: 66px;
-  font-size: 42px;
+  height: 26px;
+  line-height: 26px;
+  font-size: 17px;
   font-weight: bold;
 }
 
 .mode-text {
-  margin-top: 6px;
-  font-size: 18px;
+  margin-top: 2px;
+  font-size: 7px;
 }
 
 .nav-block {
-  height: 240px;
-  margin-top: 18px;
+  height: 96px;
+  margin-top: 7px;
   flex-direction: column;
 }
 
 .nav-button {
-  width: 184px;
-  height: 46px;
-  margin-bottom: 14px;
-  border-radius: 6px;
+  width: 74px;
+  height: 18px;
+  margin-bottom: 6px;
+  border-radius: 2px;
   background-color: #e8eef0;
   color: #172026;
-  font-size: 22px;
+  font-size: 9px;
   font-weight: bold;
 }
 
@@ -334,10 +334,10 @@ text {
 }
 
 .theme-button {
-  width: 184px;
-  height: 42px;
-  border-radius: 6px;
-  font-size: 19px;
+  width: 74px;
+  height: 17px;
+  border-radius: 2px;
+  font-size: 8px;
   font-weight: bold;
 }
 
@@ -353,14 +353,14 @@ text {
 
 /* ========== 主面板 ========== */
 .main-panel {
-  width: 576px;
-  height: 600px;
-  padding: 24px 24px;
+  width: 230px;
+  height: 240px;
+  padding: 10px 10px;
   flex-direction: column;
 }
 
 .main-scroll {
-  flex: 1;
+  height: 220px;
   flex-direction: column;
 }
 
@@ -374,50 +374,50 @@ text {
 
 /* ========== 时钟区 ========== */
 .hero-clock {
-  height: 140px;
+  height: 56px;
   flex-direction: column;
   justify-content: center;
   align-items: center;
 }
 
 .hero-time {
-  font-size: 56px;
+  font-size: 22px;
   font-weight: bold;
-  line-height: 70px;
+  line-height: 28px;
 }
 
 .hero-date {
-  margin-top: 6px;
-  font-size: 20px;
-  line-height: 26px;
+  margin-top: 2px;
+  font-size: 8px;
+  line-height: 10px;
 }
 
 /* ========== 天气摘要 ========== */
 .weather-bar {
-  height: 44px;
-  margin-top: 12px;
-  padding: 0 18px;
-  border-radius: 8px;
+  height: 18px;
+  margin-top: 5px;
+  padding: 0 7px;
+  border-radius: 3px;
   flex-direction: row;
   align-items: center;
 }
 
 .weather-text {
-  font-size: 22px;
+  font-size: 9px;
   font-weight: bold;
 }
 
 /* ========== 通用卡片 ========== */
 .section-card {
-  margin-top: 14px;
-  padding: 16px 18px;
-  border-radius: 8px;
+  margin-top: 6px;
+  padding: 6px 7px;
+  border-radius: 3px;
   flex-direction: column;
 }
 
 .section-label {
-  font-size: 15px;
-  margin-bottom: 10px;
+  font-size: 6px;
+  margin-bottom: 4px;
 }
 
 .card-light {
@@ -430,51 +430,51 @@ text {
 
 /* ========== 今日新闻 ========== */
 .news-title {
-  font-size: 22px;
+  font-size: 9px;
   font-weight: bold;
-  line-height: 30px;
+  line-height: 12px;
 }
 
 .news-desc {
-  margin-top: 6px;
-  font-size: 17px;
-  line-height: 24px;
+  margin-top: 2px;
+  font-size: 7px;
+  line-height: 10px;
 }
 
 .news-meta {
-  margin-top: 8px;
-  font-size: 15px;
+  margin-top: 3px;
+  font-size: 6px;
 }
 
 /* ========== 历史上的今天 ========== */
 .history-item {
-  margin-bottom: 10px;
+  margin-bottom: 4px;
   flex-direction: row;
   align-items: flex-start;
 }
 
 .history-year {
-  width: 80px;
-  font-size: 15px;
+  width: 32px;
+  font-size: 6px;
   font-weight: bold;
-  margin-top: 2px;
+  margin-top: 1px;
 }
 
 .history-content {
-  width: 400px;
+  width: 160px;
   flex-direction: column;
 }
 
 .history-title {
-  font-size: 18px;
+  font-size: 7px;
   font-weight: bold;
-  line-height: 26px;
+  line-height: 10px;
 }
 
 .history-desc {
-  margin-top: 4px;
-  font-size: 15px;
-  line-height: 22px;
+  margin-top: 2px;
+  font-size: 6px;
+  line-height: 9px;
 }
 
 /* ========== 文字颜色 ========== */

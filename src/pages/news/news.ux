@@ -258,13 +258,13 @@ export default {
 <style>
 text {
   color: #172026;
-  font-size: 20px;
-  line-height: 26px;
+  font-size: 8px;
+  line-height: 10px;
 }
 
 .page {
-  width: 800px;
-  height: 600px;
+  width: 320px;
+  height: 240px;
   flex-direction: row;
 }
 
@@ -290,65 +290,65 @@ text {
 }
 
 .side-bar {
-  width: 224px;
-  height: 600px;
-  padding: 24px 20px;
+  width: 90px;
+  height: 240px;
+  padding: 10px 8px;
   flex-direction: column;
 }
 
 .brand-block {
-  height: 150px;
+  height: 60px;
   flex-direction: column;
   justify-content: center;
 }
 
 .brand-en {
-  font-size: 17px;
+  font-size: 7px;
   color: #0074ff;
 }
 
 .brand-title {
-  margin-top: 10px;
-  height: 60px;
-  line-height: 60px;
-  font-size: 34px;
+  margin-top: 4px;
+  height: 24px;
+  line-height: 24px;
+  font-size: 14px;
   font-weight: bold;
 }
 
 .time-block {
-  height: 130px;
-  margin-top: 8px;
-  padding-top: 8px;
+  height: 52px;
+  margin-top: 3px;
+  padding-top: 3px;
   flex-direction: column;
   justify-content: center;
 }
 
 .time-text {
-  height: 66px;
-  line-height: 66px;
-  font-size: 42px;
+  height: 26px;
+  line-height: 26px;
+  font-size: 17px;
   font-weight: bold;
 }
 
 .mode-text {
-  margin-top: 6px;
-  font-size: 18px;
+  margin-top: 2px;
+  font-size: 7px;
 }
 
 .nav-block {
-  height: 240px;
-  margin-top: 18px;
+  height: 96px;
+  margin-top: 7px;
   flex-direction: column;
 }
 
 .nav-button {
-  width: 184px;
-  height: 46px;
-  margin-bottom: 14px;
-  border-radius: 6px;
+  width: 74px;
+  height: 18px;
+  margin-bottom: 6px;
+  border-radius: 2px;
   background-color: #e8eef0;
   color: #172026;
-  font-size: 22px;
+  font-size: 9px;
   font-weight: bold;
 }
 
@@ -368,17 +368,17 @@ text {
 }
 
 .theme-button {
-  width: 184px;
-  height: 42px;
-  border-radius: 6px;
-  font-size: 19px;
+  width: 74px;
+  height: 17px;
+  border-radius: 2px;
+  font-size: 8px;
   font-weight: bold;
 }
 
 .main-panel {
-  width: 576px;
-  height: 600px;
-  padding: 24px 24px;
+  width: 230px;
+  height: 240px;
+  padding: 10px 10px;
   flex-direction: column;
 }
 
@@ -389,46 +389,46 @@ text {
 }
 
 .action-row {
-  height: 44px;
+  height: 18px;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
 }
 
 .category-select-btn {
-  height: 40px;
-  padding: 0 16px;
-  border-radius: 6px;
-  font-size: 22px;
+  height: 16px;
+  padding: 0 6px;
+  border-radius: 2px;
+  font-size: 9px;
   font-weight: bold;
 }
 
 .refresh-button {
-  width: 82px;
-  height: 40px;
-  border-radius: 6px;
+  width: 33px;
+  height: 16px;
+  border-radius: 2px;
   background-color: #0074ff;
   color: #ffffff;
-  font-size: 19px;
+  font-size: 8px;
   font-weight: bold;
 }
 
 .state-box {
-  height: 420px;
+  height: 168px;
   justify-content: center;
   align-items: center;
   flex-direction: column;
 }
 
 .state-title {
-  font-size: 28px;
+  font-size: 11px;
   font-weight: bold;
 }
 
 .state-text {
-  width: 430px;
-  margin-top: 12px;
-  font-size: 22px;
+  width: 172px;
+  margin-top: 5px;
+  font-size: 9px;
   text-align: center;
 }
 
@@ -437,77 +437,77 @@ text {
 }
 
 .news-panel {
-  flex: 1;
-  margin-top: 18px;
+  height: 190px;
+  margin-top: 7px;
   flex-direction: column;
 }
 
 .lead-news {
-  height: 188px;
-  padding: 18px;
-  border-radius: 8px;
+  height: 75px;
+  padding: 7px;
+  border-radius: 3px;
   flex-direction: column;
   justify-content: space-between;
 }
 
 .lead-title {
-  font-size: 25px;
-  line-height: 32px;
+  font-size: 10px;
+  line-height: 13px;
   font-weight: bold;
   lines: 2;
   text-overflow: ellipsis;
 }
 
 .lead-desc {
-  font-size: 19px;
-  line-height: 26px;
+  font-size: 8px;
+  line-height: 10px;
   lines: 2;
   text-overflow: ellipsis;
 }
 
 .lead-source {
-  width: 492px;
-  font-size: 15px;
+  width: 197px;
+  font-size: 6px;
   lines: 1;
   text-overflow: ellipsis;
   color: #999999;
 }
 
 .news-grid {
-  margin-top: 14px;
+  margin-top: 6px;
   flex-direction: row;
   flex-wrap: wrap;
   justify-content: space-between;
 }
 
 .news-item {
-  width: 257px;
-  height: 130px;
-  margin-bottom: 14px;
-  padding: 12px;
-  border-radius: 8px;
+  width: 103px;
+  height: 52px;
+  margin-bottom: 6px;
+  padding: 5px;
+  border-radius: 3px;
   flex-direction: column;
   justify-content: space-between;
 }
 
 .news-item-title {
-  font-size: 19px;
-  line-height: 26px;
+  font-size: 8px;
+  line-height: 10px;
   font-weight: bold;
   lines: 2;
   text-overflow: ellipsis;
 }
 
 .news-item-desc {
-  font-size: 15px;
-  line-height: 22px;
+  font-size: 6px;
+  line-height: 9px;
   lines: 2;
   text-overflow: ellipsis;
 }
 
 .news-item-source {
-  width: 233px;
-  font-size: 14px;
+  width: 93px;
+  font-size: 6px;
   lines: 1;
   text-overflow: ellipsis;
   color: #999999;
@@ -520,21 +520,21 @@ text {
 }
 
 .picker-header {
-  height: 48px;
+  height: 19px;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
 }
 
 .picker-back-btn {
-  width: 80px;
-  height: 36px;
-  border-radius: 6px;
-  font-size: 15px;
+  width: 32px;
+  height: 14px;
+  border-radius: 2px;
+  font-size: 6px;
 }
 
 .picker-title {
-  font-size: 22px;
+  font-size: 9px;
   font-weight: bold;
 }
 
@@ -550,16 +550,16 @@ text {
 
 .picker-row {
   flex-direction: row;
-  margin-bottom: 12px;
+  margin-bottom: 5px;
   justify-content: space-between;
 }
 
 .picker-btn {
-  width: 248px;
-  height: 50px;
-  border-radius: 8px;
+  width: 99px;
+  height: 20px;
+  border-radius: 3px;
   background-color: #f0f4f5;
-  font-size: 18px;
+  font-size: 7px;
   font-weight: bold;
 }
 

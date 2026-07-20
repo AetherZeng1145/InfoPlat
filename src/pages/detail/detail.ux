@@ -258,8 +258,8 @@ export default {
 
 <style>
 .page {
-  width: 800px;
-  height: 600px;
+  width: 320px;
+  height: 240px;
   flex-direction: column;
 }
 
@@ -272,9 +272,9 @@ export default {
 }
 
 .topbar {
-  height: 70px;
-  padding-left: 24px;
-  padding-right: 24px;
+  height: 28px;
+  padding-left: 10px;
+  padding-right: 10px;
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
@@ -289,10 +289,10 @@ export default {
 }
 
 .back-btn {
-  width: 80px;
-  height: 36px;
-  border-radius: 6px;
-  font-size: 18px;
+  width: 32px;
+  height: 14px;
+  border-radius: 2px;
+  font-size: 7px;
 }
 
 .btn-light {
@@ -322,57 +322,57 @@ export default {
 }
 
 .source {
-  width: 520px;
-  font-size: 18px;
+  width: 208px;
+  font-size: 7px;
   text-align: right;
   text-overflow: ellipsis;
 }
 
 .article {
-  height: 474px;
-  padding: 28px 40px;
+  height: 190px;
+  padding: 11px 16px;
   flex-direction: column;
 }
 
 .title {
-  font-size: 32px;
+  font-size: 13px;
   font-weight: bold;
 }
 
 .url-text {
-  margin-top: 10px;
-  font-size: 14px;
+  margin-top: 4px;
+  font-size: 6px;
   lines: 2;
   text-overflow: ellipsis;
 }
 
 .loading-box {
-  margin-top: 40px;
+  margin-top: 16px;
   justify-content: center;
   align-items: center;
 }
 
 .state-text {
-  font-size: 20px;
+  font-size: 8px;
 }
 
 .desc {
-  margin-top: 20px;
-  font-size: 20px;
-  line-height: 28px;
+  margin-top: 8px;
+  font-size: 8px;
+  line-height: 11px;
 }
 
 .pager {
-  height: 44px;
-  padding-left: 24px;
-  padding-right: 24px;
+  height: 18px;
+  padding-left: 10px;
+  padding-right: 10px;
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
 }
 
 .pager-link {
-  font-size: 18px;
+  font-size: 7px;
 }
 
 .pager-link-active {
@@ -384,6 +384,6 @@ export default {
 }
 
 .pager-info {
-  font-size: 16px;
+  font-size: 6px;
 }
 </style>

@@ -370,14 +370,14 @@ export default {
 <style>
 text {
   color: #172026;
-  font-size: 20px;
-  line-height: 26px;
+  font-size: 8px;
+  line-height: 10px;
 }
 
 /* ========== 页面框架 ========== */
 .page {
-  width: 800px;
-  height: 600px;
+  width: 320px;
+  height: 240px;
   flex-direction: row;
 }
 
@@ -404,65 +404,65 @@ text {
 
 /* ========== 侧边栏 ========== */
 .side-bar {
-  width: 224px;
-  height: 600px;
-  padding: 24px 20px;
+  width: 90px;
+  height: 240px;
+  padding: 10px 8px;
   flex-direction: column;
 }
 
 .brand-block {
-  height: 150px;
+  height: 60px;
   flex-direction: column;
   justify-content: center;
 }
 
 .brand-en {
-  font-size: 17px;
+  font-size: 7px;
   color: #0074ff;
 }
 
 .brand-title {
-  margin-top: 10px;
-  height: 60px;
-  line-height: 60px;
-  font-size: 34px;
+  margin-top: 4px;
+  height: 24px;
+  line-height: 24px;
+  font-size: 14px;
   font-weight: bold;
 }
 
 .time-block {
-  height: 130px;
-  margin-top: 8px;
-  padding-top: 8px;
+  height: 52px;
+  margin-top: 3px;
+  padding-top: 3px;
   flex-direction: column;
   justify-content: center;
 }
 
 .time-text {
-  height: 66px;
-  line-height: 66px;
-  font-size: 42px;
+  height: 26px;
+  line-height: 26px;
+  font-size: 17px;
   font-weight: bold;
 }
 
 .mode-text {
-  margin-top: 6px;
-  font-size: 18px;
+  margin-top: 2px;
+  font-size: 7px;
 }
 
 .nav-block {
-  height: 240px;
-  margin-top: 18px;
+  height: 96px;
+  margin-top: 7px;
   flex-direction: column;
 }
 
 .nav-button {
-  width: 184px;
-  height: 46px;
-  margin-bottom: 14px;
-  border-radius: 6px;
+  width: 74px;
+  height: 18px;
+  margin-bottom: 6px;
+  border-radius: 2px;
   background-color: #e8eef0;
   color: #172026;
-  font-size: 22px;
+  font-size: 9px;
   font-weight: bold;
 }
 
@@ -482,18 +482,18 @@ text {
 }
 
 .theme-button {
-  width: 184px;
-  height: 42px;
-  border-radius: 6px;
-  font-size: 19px;
+  width: 74px;
+  height: 17px;
+  border-radius: 2px;
+  font-size: 8px;
   font-weight: bold;
 }
 
 /* ========== 主面板 ========== */
 .main-panel {
-  width: 576px;
-  height: 600px;
-  padding: 24px 24px;
+  width: 230px;
+  height: 240px;
+  padding: 10px 10px;
   flex-direction: column;
 }
 
@@ -503,41 +503,41 @@ text {
 }
 
 .action-row {
-  height: 44px;
+  height: 18px;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
 }
 
 .city-select-btn {
-  height: 40px;
-  padding: 0 16px;
-  border-radius: 6px;
-  font-size: 22px;
+  height: 16px;
+  padding: 0 6px;
+  border-radius: 2px;
+  font-size: 9px;
   font-weight: bold;
 }
 
 .refresh-button {
-  width: 82px;
-  height: 40px;
-  border-radius: 6px;
+  width: 33px;
+  height: 16px;
+  border-radius: 2px;
   background-color: #0074ff;
   color: #ffffff;
-  font-size: 19px;
+  font-size: 8px;
   font-weight: bold;
 }
 
 /* 天气内容滚动区 */
 .weather-panel {
-  height: 480px;
-  margin-top: 18px;
+  height: 192px;
+  margin-top: 7px;
   flex-direction: column;
 }
 
 /* 当日主卡片 — 增大容器防裁切 */
 .lead-card {
-  padding: 32px 24px;
-  border-radius: 10px;
+  padding: 13px 10px;
+  border-radius: 4px;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
@@ -549,140 +549,140 @@ text {
 }
 
 .lead-city {
-  font-size: 30px;
+  font-size: 12px;
   font-weight: bold;
-  line-height: 38px;
+  line-height: 15px;
 }
 
 .lead-desc {
-  margin-top: 6px;
-  font-size: 19px;
-  line-height: 26px;
+  margin-top: 2px;
+  font-size: 8px;
+  line-height: 10px;
 }
 
 .lead-temp {
-  font-size: 42px;
+  font-size: 17px;
   font-weight: bold;
   color: #0074ff;
-  margin-left: 16px;
-  line-height: 50px;
+  margin-left: 6px;
+  line-height: 20px;
 }
 
 /* 天气数据网格 */
 .detail-grid {
-  margin-top: 14px;
+  margin-top: 6px;
   flex-direction: row;
   flex-wrap: wrap;
   justify-content: space-between;
 }
 
 .detail-card {
-  width: 168px;
-  height: 72px;
-  margin-bottom: 14px;
-  padding: 10px 12px;
-  border-radius: 8px;
+  width: 67px;
+  height: 29px;
+  margin-bottom: 6px;
+  padding: 4px 5px;
+  border-radius: 3px;
   flex-direction: column;
   justify-content: space-between;
 }
 
 .detail-label {
-  font-size: 15px;
+  font-size: 6px;
 }
 
 .detail-value {
-  font-size: 22px;
+  font-size: 9px;
   font-weight: bold;
 }
 
 /* 预警 */
 .alert-bar {
-  margin-bottom: 12px;
-  padding: 14px 16px;
-  border-radius: 8px;
+  margin-bottom: 5px;
+  padding: 6px 6px;
+  border-radius: 3px;
   background-color: #fff3cd;
   flex-direction: column;
 }
 
 .alert-text {
-  font-size: 19px;
+  font-size: 8px;
   color: #856404;
 }
 
 .alert-detail-wrap {
-  margin-top: 12px;
-  padding-top: 12px;
+  margin-top: 5px;
+  padding-top: 5px;
   flex-direction: column;
 }
 
 .alert-detail-title {
-  font-size: 19px;
+  font-size: 8px;
   font-weight: bold;
-  line-height: 28px;
+  line-height: 11px;
 }
 
 .alert-detail {
-  margin-top: 8px;
-  font-size: 18px;
-  line-height: 26px;
+  margin-top: 3px;
+  font-size: 7px;
+  line-height: 10px;
 }
 
 /* 7天预报 — 增大行高和间距 */
 .section-card {
-  margin-top: 18px;
-  padding: 20px;
-  border-radius: 8px;
+  margin-top: 7px;
+  padding: 8px;
+  border-radius: 3px;
   flex-direction: column;
 }
 
 .section-title {
-  font-size: 20px;
+  font-size: 8px;
   font-weight: bold;
-  margin-bottom: 20px;
+  margin-bottom: 8px;
 }
 
 .forecast-row {
   width: 100%;
-  height: 54px;
-  margin-bottom: 14px;
-  padding: 0 20px;
-  border-radius: 8px;
+  height: 22px;
+  margin-bottom: 6px;
+  padding: 0 8px;
+  border-radius: 3px;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
 }
 
 .forecast-day {
-  font-size: 18px;
+  font-size: 7px;
 }
 
 .forecast-info {
-  font-size: 21px;
+  font-size: 8px;
   font-weight: bold;
 }
 
 /* 生活指数 — 同样增大间距 */
 .index-item {
-  margin-bottom: 14px;
-  padding: 14px 20px;
-  border-radius: 8px;
+  margin-bottom: 6px;
+  padding: 6px 8px;
+  border-radius: 3px;
   flex-direction: column;
 }
 
 .index-name {
-  font-size: 16px;
-  margin-bottom: 6px;
+  font-size: 6px;
+  margin-bottom: 2px;
 }
 
 .index-brief {
-  font-size: 21px;
+  font-size: 8px;
   font-weight: bold;
 }
 
 .index-detail {
-  margin-top: 10px;
-  font-size: 18px;
-  line-height: 26px;
+  margin-top: 4px;
+  font-size: 7px;
+  line-height: 10px;
 }
 
 /* ========== 城市选择器 ========== */
@@ -692,47 +692,47 @@ text {
 }
 
 .picker-header {
-  height: 48px;
+  height: 19px;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
 }
 
 .picker-back-btn {
-  width: 80px;
-  height: 36px;
-  border-radius: 6px;
-  font-size: 15px;
+  width: 32px;
+  height: 14px;
+  border-radius: 2px;
+  font-size: 6px;
 }
 
 .picker-title {
-  font-size: 22px;
+  font-size: 9px;
   font-weight: bold;
 }
 
 .breadcrumb {
-  height: 32px;
-  margin-top: 4px;
-  margin-bottom: 8px;
+  height: 13px;
+  margin-top: 2px;
+  margin-bottom: 3px;
   flex-direction: row;
   align-items: center;
 }
 
 .breadcrumb-link {
-  height: 28px;
+  height: 11px;
   background-color: transparent;
-  font-size: 14px;
+  font-size: 6px;
   color: #0074ff;
 }
 
 .breadcrumb-sep {
-  font-size: 14px;
-  margin-left: 4px;
-  margin-right: 4px;
+  font-size: 6px;
+  margin-left: 2px;
+  margin-right: 2px;
 }
 
 .breadcrumb-current {
-  font-size: 14px;
+  font-size: 6px;
   font-weight: bold;
 }
 
@@ -749,16 +749,16 @@ text {
 
 .picker-row {
   flex-direction: row;
-  margin-bottom: 12px;
+  margin-bottom: 5px;
   justify-content: space-between;
 }
 
 .picker-btn {
-  width: 248px;
-  height: 50px;
-  border-radius: 8px;
+  width: 99px;
+  height: 20px;
+  border-radius: 3px;
   background-color: #f0f4f5;
-  font-size: 18px;
+  font-size: 7px;
   font-weight: bold;
 }
 
