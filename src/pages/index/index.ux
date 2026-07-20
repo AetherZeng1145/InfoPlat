@@ -275,7 +275,7 @@ text {
 }
 
 .brand-en {
-  font-size: 11px;
+  font-size: 8px;
   color: #0074ff;
   font-weight: bold;
 }
