@@ -45,10 +45,14 @@
         <!-- 历史上的今天 -->
         <div class="section-card {{ isDark ? 'card-dark' : 'card-light' }}">
           <text class="section-label {{ isDark ? 'text-dark-sub' : 'text-light-sub' }}">历史上的今天</text>
-          <div for="{{ historyList }}" class="history-item">
-            <text class="history-year {{ isDark ? 'text-dark-sub' : 'text-light-sub' }}">{{ $item.yearLabel }}</text>
-            <text class="history-title {{ isDark ? 'text-dark' : 'text-light' }}">{{ $item.title }}</text>
-            <text class="history-desc {{ isDark ? 'text-dark-sub' : 'text-light-sub' }}">{{ $item.desc }}</text>
+          <div for="{{ historyList }}">
+            <div class="history-item">
+              <text class="history-year {{ isDark ? 'text-dark-sub' : 'text-light-sub' }}">{{ $item.yearLabel }}</text>
+              <div class="history-content">
+                <text class="history-title {{ isDark ? 'text-dark' : 'text-light' }}">{{ $item.title }}</text>
+                <text class="history-desc {{ isDark ? 'text-dark-sub' : 'text-light-sub' }}">{{ $item.desc }}</text>
+              </div>
+            </div>
           </div>
         </div>
       </scroll>
@@ -185,7 +189,7 @@ export default {
       this.newsDesc = item.description
       return
     }
-    getLatestNews({ categories: ["politics"], pageSize: 50 }).then((list) => {
+    getLatestNews({ categories: ["politics"], pageSize: 20 }).then((list) => {
       if (list && list.length) {
         setCache(cacheKey, list, 5 * 60 * 1000)
         this.newsTitle = list[0].title
@@ -209,14 +213,19 @@ export default {
     var cacheKey = "today_history"
     var cached = getCached(cacheKey)
     if (cached && cached.length) {
+      console.info("[InfoPlat] Index history from cache: " + cached.length + " items")
       this.historyList = cached
       return
     }
+    console.info("[InfoPlat] Index history fetching...")
     getTodayInHistory().then((list) => {
+      console.info("[InfoPlat] Index history got: " + (list ? list.length : 0) + " items")
       if (list && list.length) {
+        console.info("[InfoPlat] Index history first item: " + JSON.stringify(list[0]))
         var formatted = list.map((item) => {
           return { title: item.title, year: item.year, yearLabel: this.formatHistoryYear(item.year), desc: item.desc, link: item.link }
         })
+        console.info("[InfoPlat] Index history formatted first: " + JSON.stringify(formatted[0]))
         setCache(cacheKey, formatted, 30 * 60 * 1000)
         this.historyList = formatted
       }
@@ -439,21 +448,24 @@ text {
 
 /* ========== 历史上的今天 ========== */
 .history-item {
-  margin-bottom: 12px;
-  padding: 8px 0;
-  flex-direction: column;
-  border-bottom-width: 1px;
-  border-bottom-color: #e0e0e0;
+  margin-bottom: 10px;
+  flex-direction: row;
+  align-items: flex-start;
 }
 
 .history-year {
+  width: 80px;
   font-size: 15px;
   font-weight: bold;
-  color: #0074ff;
+  margin-top: 2px;
+}
+
+.history-content {
+  width: 400px;
+  flex-direction: column;
 }
 
 .history-title {
-  margin-top: 4px;
   font-size: 18px;
   font-weight: bold;
   line-height: 26px;

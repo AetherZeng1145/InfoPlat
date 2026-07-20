@@ -25,7 +25,7 @@ var AD_BOOST_NEAR_AD = 0.15
 
 // ===== Step 1: 段落提取（字符串状态机 + 有界子树传播 + 结构元数据） =====
 
-var CONTENT_TAGS = ["p", "blockquote", "cite", "div"]
+var CONTENT_TAGS = ["p", "blockquote", "cite"]
 
 function parseTagAttrs(tagHtml) {
   var m = tagHtml.match(/^<(\w+)/)
@@ -758,107 +758,57 @@ function extractFromScripts(html) {
   var match
   var maxScripts = 10 // 限制遍历次数
   var count = 0
-  var scriptLengths = []
-
-  console.log("[Tecko-R] 开始扫描 script 标签")
 
   while ((match = scriptRegex.exec(html)) !== null && count < maxScripts) {
     count++
     var scriptContent = match[1]
-    var len = scriptContent ? scriptContent.length : 0
-    scriptLengths.push(len)
-
-    if (!scriptContent || scriptContent.length < 100) {
-      console.log("[Tecko-R] script #" + count + " 长度=" + len + "，跳过（太短）")
-      continue
-    }
-
-    console.log("[Tecko-R] script #" + count + " 长度=" + len + "，开始分析")
-    console.log("[Tecko-R] script #" + count + " 内容预览:", scriptContent.substring(0, 200))
+    if (!scriptContent || scriptContent.length < 100) continue
 
     // 尝试提取 window.__INITIAL_STATE__ 或 window.__DATA__ 等
     var stateMatch = scriptContent.match(/window\.__\w+__\s*=\s*(\{[\s\S]+\})\s*;?\s*$/m)
     if (stateMatch) {
-      console.log("[Tecko-R] script #" + count + " 找到 window.__*__ 数据，长度=" + stateMatch[1].length)
       try {
         var json = JSON.parse(stateMatch[1])
         var content = findContentInJson(json, 0)
-        if (content) {
-          console.log("[Tecko-R] script #" + count + " 从 window.__*__ 提取到内容，长度=" + content.length)
-          return content
-        }
-      } catch (e) {
-        console.log("[Tecko-R] script #" + count + " JSON 解析失败:", e.message)
-      }
-    }
-
-    // 检测 SPA 框架配置（如 window.GRAY_INJECTOR）
-    var spaMatch = scriptContent.match(/window\.\w+\s*=\s*\{[^}]*appName[^}]*\}/i)
-    if (spaMatch) {
-      console.log("[Tecko-R] script #" + count + " 检测到 SPA 框架配置，标记为 SPA 页面")
-      return "SPA_DETECTED"
-    }
-
-    // 检测骨架屏（skeleton）
-    if (html.indexOf("__skeleton-container") !== -1 || html.indexOf("__skeleton-paragraph") !== -1) {
-      console.log("[Tecko-R] 检测到骨架屏，标记为 SPA 页面")
-      return "SPA_DETECTED"
+        if (content) return content
+      } catch (e) {}
     }
 
     // 尝试直接解析整个 script 内容为 JSON
     if (scriptContent.trim().charAt(0) === "{") {
-      console.log("[Tecko-R] script #" + count + " 尝试解析为 JSON")
       try {
         var json2 = JSON.parse(scriptContent.trim())
         var content2 = findContentInJson(json2, 0)
-        if (content2) {
-          console.log("[Tecko-R] script #" + count + " 从 JSON 提取到内容，长度=" + content2.length)
-          return content2
-        }
-      } catch (e) {
-        console.log("[Tecko-R] script #" + count + " JSON 解析失败:", e.message)
-      }
+        if (content2) return content2
+      } catch (e) {}
     }
 
     // 查找 script 中的 content/body 字段
     var contentMatch = scriptContent.match(/"content"\s*:\s*"([^"]{100,})"/)
     if (contentMatch) {
-      console.log("[Tecko-R] script #" + count + " 找到 content 字段，长度=" + contentMatch[1].length)
       var raw = contentMatch[1]
       raw = raw.replace(/\\n/g, "\n").replace(/\\t/g, "\t").replace(/\\"/g, '"')
       raw = raw.replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"')
       raw = raw.replace(/<[^>]+>/g, "\n")
       raw = raw.split(/[\r\n]+/).map(function (l) { return l.trim() }).filter(function (l) { return l.length > 0 }).join("\n\n")
-      if (raw.length > 50) {
-        console.log("[Tecko-R] script #" + count + " 从 content 字段提取到内容，长度=" + raw.length)
-        return raw
-      }
+      if (raw.length > 50) return raw
     }
 
     var bodyMatch = scriptContent.match(/"body"\s*:\s*"([^"]{100,})"/)
     if (bodyMatch) {
-      console.log("[Tecko-R] script #" + count + " 找到 body 字段，长度=" + bodyMatch[1].length)
       var raw2 = bodyMatch[1]
       raw2 = raw2.replace(/\\n/g, "\n").replace(/\\t/g, "\t").replace(/\\"/g, '"')
       raw2 = raw2.replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"')
       raw2 = raw2.replace(/<[^>]+>/g, "\n")
       raw2 = raw2.split(/[\r\n]+/).map(function (l) { return l.trim() }).filter(function (l) { return l.length > 0 }).join("\n\n")
-      if (raw2.length > 50) {
-        console.log("[Tecko-R] script #" + count + " 从 body 字段提取到内容，长度=" + raw2.length)
-        return raw2
-      }
+      if (raw2.length > 50) return raw2
     }
 
     var descMatch = scriptContent.match(/"description"\s*:\s*"([^"]{100,})"/)
     if (descMatch) {
-      console.log("[Tecko-R] script #" + count + " 找到 description 字段，长度=" + descMatch[1].length)
       return descMatch[1].replace(/\\n/g, "\n").replace(/\\"/g, '"')
     }
-
-    console.log("[Tecko-R] script #" + count + " 未找到有效内容")
   }
-
-  console.log("[Tecko-R] 扫描完成，共 " + count + " 个 script 标签，长度分布:", scriptLengths.join(", "))
   return ""
 }
 
@@ -983,11 +933,6 @@ function parseHTML(html) {
 
   // 2. Tecko-R 提取失败，检测是否为 SPA 页面（script 标签中有内嵌数据）
   var scriptData = extractFromScripts(html)
-  if (scriptData === "SPA_DETECTED") {
-    // 检测到 SPA 框架配置或骨架屏，标记为 SPA
-    console.log("[Tecko-R] 检测到 SPA 框架或骨架屏，返回 isSPA=true")
-    return { text: "", ps: result.ps, bscScores: result.bscScores, isSPA: true }
-  }
   if (scriptData && scriptData.length > 50) {
     // SPA 页面：返回空文本，标记 isSPA，等待后续传文
     return { text: "", ps: result.ps, bscScores: result.bscScores, isSPA: true }

@@ -1,15 +1,14 @@
 import fetch from "@system.fetch"
-import { toAreaCode } from "./citymap"
 
 const CURRENTS_API_KEY = "I_gqH5IB0yC8eS7mhIVx7LmQkx2IpDOtmCI6WTsksar1EFbA"
 const CURRENTS_BASE_URL = "https://api.currentsapi.services/v1"
 
 const PROVIDERS = {
   weather: {
-    name: "tmini-天气",
-    url: "https://tmini.net/api/weather",
+    name: "UApiPro",
+    url: "https://uapis.cn/api/v1/misc/weather",
     key: "",
-    note: "tmini天气API，按行政区域编号查询实时天气。"
+    note: "UApiPro天气API，支持中文城市名直接查询。"
   },
   express: {
     name: "tmini-快递查询",
@@ -57,27 +56,32 @@ function request(options) {
       }
     }, 60000)
 
+    console.log("request: " + method + " " + url)
     fetch.fetch({
       url: url,
       method: method,
       header: options.header || {},
       responseType: responseType,
       success(res) {
+        console.log("request success: code=" + (res.code || res.statusCode) + ", url=" + url)
         if (isCompleted) return
         isCompleted = true
         clearTimeout(timeoutId)
 
         const code = res.code || res.statusCode
 
-        let data = res.data
-        if (responseType === "json" && typeof data === "string") {
+        // 兼容：先尝试 res.data，再尝试 res.result（不同 quickapp 实现可能不同）
+        let data = res.data !== undefined ? res.data : res.result
+
+        // 无论如何都尝试 parse，防止 responseType json 未生效
+        if (typeof data === "string") {
           data = parseData(data)
         }
 
         if (code >= 200 && code < 300) {
           resolve(data)
-        } else if (data && typeof data === "object") {
-          // fallback: 响应体存在且是对象，直接使用
+        } else if (data && typeof data === "object" && Object.keys(data).length > 0) {
+          // fallback: 响应体存在且是非空对象，直接使用
           resolve(data)
         } else {
           reject(new Error("HTTP " + code))
@@ -87,6 +91,7 @@ function request(options) {
         if (isCompleted) return
         isCompleted = true
         clearTimeout(timeoutId)
+        console.log("request fail: code=" + code + ", url=" + url + ", data=" + JSON.stringify(data))
 
         reject(new Error("Fetch failed: " + code))
       }
@@ -98,21 +103,108 @@ function request(options) {
  * Fetch raw text/html
  */
 export function fetchText(url) {
-  return request({
-    url: url,
-    method: "GET",
-    responseType: "text"
+  return new Promise(function (resolve, reject) {
+    var isCompleted = false
+    var timeoutId = setTimeout(function () {
+      if (!isCompleted) {
+        isCompleted = true
+        reject(new Error("Timeout"))
+      }
+    }, 60000)
+
+    fetch.fetch({
+      url: url,
+      method: "GET",
+      header: {
+        "User-Agent": "Mozilla/5.0 (Linux; Android 10; SM-G975F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.106 Mobile Safari/537.36"
+      },
+      success: function (res) {
+        if (isCompleted) return
+        isCompleted = true
+        clearTimeout(timeoutId)
+
+        var code = res.code || res.statusCode
+        var data = res.data !== undefined ? res.data : res.result
+        var headers = res.headers || {}
+
+        console.log("fetchText 响应 code=" + code + ", url=" + url + ", headers=" + JSON.stringify(headers))
+
+        // 处理 3xx 重定向：尝试从 header 中获取 Location
+        if (code >= 300 && code < 400) {
+          var location = headers["location"] || headers["Location"] || ""
+          if (location) {
+            console.log("fetchText 重定向到: " + location)
+            resolve({ redirect: location })
+            return
+          }
+        }
+
+        // 直接返回原始字符串
+        if (typeof data === "string") {
+          resolve(data)
+        } else if (typeof data === "object" && data !== null) {
+          try {
+            resolve(JSON.stringify(data))
+          } catch (e) {
+            resolve("")
+          }
+        } else {
+          resolve("")
+        }
+      },
+      fail: function (data, code) {
+        if (isCompleted) return
+        isCompleted = true
+        clearTimeout(timeoutId)
+        console.log("fetchText fail: code=" + code + ", url=" + url + ", data=" + JSON.stringify(data))
+
+        reject(new Error("Fetch failed: " + code))
+      }
+    })
   })
+}
+
+function decodeHtmlEntities(text) {
+  if (!text) return ""
+  var map = {
+    "nbsp": " ", "ensp": " ", "emsp": " ", "thinsp": " ",
+    "quot": "\"", "apos": "'", "lt": "<", "gt": ">",
+    "amp": "&",
+    "mdash": "—", "ndash": "–", "hellip": "…",
+    "lsquo": "‘", "rsquo": "’",
+    "ldquo": "“", "rdquo": "”",
+    "copy": "©", "reg": "®", "trade": "™",
+    "times": "×", "divide": "÷",
+    "deg": "°", "plusmn": "±", "micro": "µ",
+    "para": "¶", "middot": "·",
+    "laquo": "«", "raquo": "»",
+    "larr": "←", "uarr": "↑", "rarr": "→", "darr": "↓",
+    "bull": "•", "star": "★",
+    "lrm": "", "rlm": "", "zwnj": "", "zwj": ""
+  }
+  // 命名实体（有无分号都匹配）
+  text = text.replace(/&([a-zA-Z]+);?/g, function (m, name) {
+    var val = map[name]
+    return val !== undefined ? val : m
+  })
+  // 数字实体 &#123; 或 &#123
+  text = text.replace(/&#(\d+);?/g, function (m, code) {
+    var n = parseInt(code, 10)
+    return (n >= 32 && n <= 65535) ? String.fromCharCode(n) : m
+  })
+  // 十六进制实体 &#x1A; 或 &#x1a
+  text = text.replace(/&#x([0-9a-fA-F]+);?/g, function (m, hex) {
+    var n = parseInt(hex, 16)
+    return (n >= 32 && n <= 65535) ? String.fromCharCode(n) : m
+  })
+  return text
 }
 
 function stripHtmlAndFilter(text) {
   if (!text) return ""
-  let cleanText = text.replace(/<[^>]+>/g, " ")
-  cleanText = cleanText.replace(/&nbsp;/g, " ")
-                       .replace(/&quot;/g, "\"")
-                       .replace(/&amp;/g, "&")
-                       .replace(/&lt;/g, "<")
-                       .replace(/&gt;/g, ">")
+  // 先解码实体，再剥标签
+  let cleanText = decodeHtmlEntities(text)
+  cleanText = cleanText.replace(/<[^>]+>/g, " ")
 
   let lines = cleanText.split(/[\r\n]+/)
   let filteredLines = lines.filter((line) => line.indexOf("⬅️") === -1)
@@ -122,7 +214,9 @@ function stripHtmlAndFilter(text) {
 
 function cleanDescription(text) {
   if (!text) return ""
-  var cleaned = text
+  var cleaned = decodeHtmlEntities(text)
+  // 剥 HTML 标签
+  cleaned = cleaned.replace(/<[^>]+>/g, " ")
   // 去掉来源标注
   cleaned = cleaned.replace(/来源[：:].*$/gm, "")
   cleaned = cleaned.replace(/编辑[：:].*$/gm, "")
@@ -235,7 +329,6 @@ const DOMAIN_WHITELIST = [
   "xinhuanet.com", "news.cn",
   "chinanews.com",
   "ithome.com",
-  "baidu.com", "baijiahao.baidu.com",
   "qq.com", "new.qq.com", "weixin.qq.com", "mp.weixin.qq.com",
   "ifeng.com",
   "caixin.com",
@@ -329,33 +422,22 @@ export function getLatestNews(options) {
 }
 
 export function getWeather(city) {
-  var areaCode = toAreaCode(city)
-  if (!areaCode) {
-    return Promise.resolve({
-      ready: false,
-      title: city,
-      subtitle: "未知城市",
-      message: "未找到该城市的区域编号",
-      details: [],
-      detailsExtra: [],
-      indexes: [],
-      forecasts: [],
-      alerts: []
-    })
-  }
-
   var query = encodeQuery({
-    location: areaCode
+    city: city,
+    extended: true,
+    forecast: true,
+    indices: true
   })
+
   return request({
     url: PROVIDERS.weather.url + "?" + query
   }).then((data) => {
-    if (!data || data.code !== 0 || !data.data) {
+    if (!data || !data.city) {
       return {
         ready: false,
         title: city,
         subtitle: "查询失败",
-        message: data && data.msg ? data.msg : "天气数据暂不可用",
+        message: "天气数据暂不可用",
         details: [],
         detailsExtra: [],
         indexes: [],
@@ -363,52 +445,79 @@ export function getWeather(city) {
         alerts: []
       }
     }
-    var now = data.data.now || {}
-    var loc = data.data.location || {}
-    var temp = now.temp !== undefined ? now.temp : "--"
-    var desc = now.text || "未知"
-    var feelsLike = now.feels_like !== undefined ? now.feels_like : "--"
-    var humidity = now.rh !== undefined ? now.rh + "%" : "--"
-    var windDir = now.wind_dir || "--"
-    var windClass = now.wind_class || "--"
-    var aqi = now.aqi || 0
-    var pm25 = now.pm25 || 0
-    var pm10 = now.pm10 || 0
-    var clouds = now.clouds !== undefined ? now.clouds + "%" : "--"
-    var vis = now.vis !== undefined ? (now.vis / 1000).toFixed(1) + "km" : "--"
-    var pressure = now.pressure !== undefined ? now.pressure + "hPa" : "--"
-    var district = loc.name || city
+
+    var temp = data.temperature !== undefined ? data.temperature : "--"
+    var desc = data.weather || "未知"
+    var feelsLike = data.feels_like !== undefined ? data.feels_like : "--"
+    var humidity = data.humidity !== undefined ? data.humidity + "%" : "--"
+    var windDir = data.wind_direction || "--"
+    var windPower = data.wind_power || "--"
+    var clouds = data.cloud !== undefined ? data.cloud + "%" : "--"
+    var vis = data.visibility !== undefined ? data.visibility + "km" : "--"
+    var pressure = data.pressure !== undefined ? data.pressure + "hPa" : "--"
+    var district = data.city || city
+    var aqi = data.aqi || 0
+    var pm25 = data.air_pollutants ? data.air_pollutants.pm25 : 0
+    var pm10 = data.air_pollutants ? data.air_pollutants.pm10 : 0
 
     // 生活指数
     var indexes = []
-    var rawIndexes = data.data.indexes || []
-    for (var i = 0; i < rawIndexes.length; i++) {
-      indexes.push({ name: rawIndexes[i].name, brief: rawIndexes[i].brief, detail: rawIndexes[i].detail || "" })
+    if (data.life_indices) {
+      var indices = data.life_indices
+      var indexNames = {
+        "clothing": "穿衣",
+        "uv": "紫外线",
+        "car_wash": "洗车",
+        "drying": "晾晒",
+        "air_conditioner": "空调",
+        "cold_risk": "感冒",
+        "exercise": "运动",
+        "comfort": "舒适度",
+        "travel": "出行",
+        "fishing": "钓鱼",
+        "allergy": "过敏",
+        "sunscreen": "防晒",
+        "mood": "心情",
+        "beer": "啤酒",
+        "umbrella": "雨伞",
+        "traffic": "交通",
+        "air_purifier": "空气净化器",
+        "pollen": "花粉"
+      }
+      for (var key in indices) {
+        if (indices[key] && indices[key].brief) {
+          indexes.push({
+            name: indexNames[key] || key,
+            brief: indices[key].brief,
+            detail: indices[key].advice || ""
+          })
+        }
+      }
     }
 
     // 7天预报
     var forecasts = []
-    var rawForecasts = data.data.forecasts || []
-    var weekDays = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"]
-    var today = new Date()
-    for (var j = 0; j < rawForecasts.length && j < 7; j++) {
-      var f = rawForecasts[j]
-      var day = weekDays[(today.getDay() + j) % 7]
-      forecasts.push({
-        day: day,
-        info: (f.text_day || "--") + "/" + (f.text_night || "--") + " " + (f.low || "--") + "~" + (f.high || "--") + "°C"
-      })
+    if (data.forecast) {
+      for (var i = 0; i < data.forecast.length && i < 7; i++) {
+        var f = data.forecast[i]
+        forecasts.push({
+          day: f.week || "--",
+          info: (f.weather_day || "--") + "/" + (f.weather_night || "--") + " " + (f.temp_min || "--") + "~" + (f.temp_max || "--") + "°C"
+        })
+      }
     }
 
     // 预警
     var alerts = []
-    var rawAlerts = data.data.alerts || []
-    for (var k = 0; k < rawAlerts.length; k++) {
-      alerts.push({
-        title: rawAlerts[k].type + rawAlerts[k].level + " 正在生效",
-        alertTitle: rawAlerts[k].title || "",
-        desc: rawAlerts[k].desc || ""
-      })
+    if (data.alerts) {
+      for (var j = 0; j < data.alerts.length; j++) {
+        var alert = data.alerts[j]
+        alerts.push({
+          title: alert.type + alert.level + " 正在生效",
+          alertTitle: alert.title || "",
+          desc: alert.text || ""
+        })
+      }
     }
 
     return {
@@ -422,7 +531,7 @@ export function getWeather(city) {
         { label: "体感", value: feelsLike + "°C" },
         { label: "湿度", value: humidity },
         { label: "风向", value: windDir },
-        { label: "风力", value: windClass }
+        { label: "风力", value: windPower }
       ],
       detailsExtra: [
         { label: "云量", value: clouds },
@@ -533,7 +642,7 @@ export function getExpress(trackingNo) {
         subtitle: cpName,
         message: pkg.operateMessage || "暂无最新状态",
         status: getStateText(pkg.state || ""),
-        details: trackingDetails.slice(0, 8).map((item) => {
+        details: trackingDetails.map((item) => {
           return { time: formatTime(item.time), text: item.context || "" }
         })
       }

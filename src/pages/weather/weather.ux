@@ -12,6 +12,7 @@
       </div>
 
       <div class="nav-block">
+        <input class="nav-button {{ isDark ? 'btn-dark' : 'btn-light' }}" type="button" value="首页" onclick="goHome" />
         <input class="nav-button {{ isDark ? 'btn-dark' : 'btn-light' }}" type="button" value="新闻" onclick="goNews" />
         <input class="nav-button nav-button-active" type="button" value="天气" />
         <input class="nav-button {{ isDark ? 'btn-dark' : 'btn-light' }}" type="button" value="快递" onclick="goExpress" />
@@ -31,8 +32,12 @@
         <scroll class="weather-panel" scroll-y="true" bounces="true">
           <!-- 预警 -->
           <div for="{{ weatherInfo.alerts }}">
-            <div class="alert-bar">
-              <text class="alert-text">⚠ {{ $item }}</text>
+            <div class="alert-bar {{ isDark ? 'card-dark' : 'card-light' }}" onclick="toggleAlert($idx)">
+              <text class="alert-text">{{ $item.title }}</text>
+              <div class="alert-detail-wrap" if="{{ expandedAlertIdx === $idx }}">
+                <text class="alert-detail-title {{ isDark ? 'text-dark' : 'text-light' }}" if="{{ $item.alertTitle }}">{{ $item.alertTitle }}</text>
+                <text class="alert-detail {{ isDark ? 'text-dark-sub' : 'text-light-sub' }}" if="{{ $item.desc }}">{{ $item.desc }}</text>
+              </div>
             </div>
           </div>
 
@@ -76,9 +81,10 @@
           <div class="section-card {{ isDark ? 'card-dark' : 'card-light' }}" if="{{ weatherInfo.indexes.length > 0 }}">
             <text class="section-title {{ isDark ? 'text-dark' : 'text-light' }}">生活指数</text>
             <div for="{{ weatherInfo.indexes }}">
-              <div class="index-row {{ isDark ? 'card-dark' : 'card-light' }}">
+              <div class="index-item {{ isDark ? 'card-dark' : 'card-light' }}">
                 <text class="index-name {{ isDark ? 'text-dark-sub' : 'text-light-sub' }}">{{ $item.name }}</text>
                 <text class="index-brief {{ isDark ? 'text-dark' : 'text-light' }}">{{ $item.brief }}</text>
+                <text class="index-detail {{ isDark ? 'text-dark-sub' : 'text-light-sub' }}" if="{{ $item.detail }}">{{ $item.detail }}</text>
               </div>
             </div>
           </div>
@@ -120,17 +126,17 @@
             </div>
           </div>
 
-          <!-- 省份列表（单列全宽） -->
+          <!-- 省份列表（双列） -->
           <scroll class="picker-scroll" scroll-y="true" bounces="true" if="{{ pickerLevel === 1 }}">
-            <div for="{{ pickerList }}">
-              <input class="picker-btn-full {{ isDark ? 'picker-btn-dark' : '' }}" type="button" value="{{ $item }}" onclick="pickProvince($idx)" />
+            <div class="picker-wrap">
+              <input class="picker-btn {{ isDark ? 'picker-btn-dark' : '' }}" type="button" for="{{ pickerList }}" value="{{ $item }}" onclick="pickProvince($idx)" />
             </div>
           </scroll>
 
-          <!-- 城市列表（单列全宽） -->
+          <!-- 城市列表（双列） -->
           <scroll class="picker-scroll" scroll-y="true" bounces="true" if="{{ pickerLevel === 2 }}">
-            <div for="{{ pickerList }}">
-              <input class="picker-btn-full {{ isDark ? 'picker-btn-dark' : '' }}" type="button" value="{{ $item }}" onclick="pickCity($idx)" />
+            <div class="picker-wrap">
+              <input class="picker-btn {{ isDark ? 'picker-btn-dark' : '' }}" type="button" for="{{ pickerList }}" value="{{ $item }}" onclick="pickCity($idx)" />
             </div>
           </scroll>
         </div>
@@ -143,7 +149,7 @@
 import router from "@system.router"
 import storage from "@system.storage"
 import { getWeather } from "../../common/services"
-import { getThemeSync, setTheme } from "../../common/theme"
+import { getThemeSync, initTheme, setTheme } from "../../common/theme"
 import { getCached, setCache } from "../../common/cache"
 import { regions } from "../../common/cities"
 
@@ -168,6 +174,7 @@ export default {
     provinceLabel: "",
     selectedRegionIdx: -1,
     selectedProvinceIdx: -1,
+    expandedAlertIdx: -1,
     weatherInfo: {
       title: "北京",
       subtitle: "正在获取天气...",
@@ -181,9 +188,12 @@ export default {
   },
 
   onInit() {
-    this.isDark = getThemeSync()
-    this.themeButtonText = this.isDark ? "浅色模式" : "深色模式"
-    this.modeLabel = this.isDark ? "深色" : "浅色"
+    var self = this
+    initTheme(function (isDark) {
+      self.isDark = isDark
+      self.themeButtonText = isDark ? "浅色模式" : "深色模式"
+      self.modeLabel = isDark ? "深色" : "浅色"
+    })
     this.updateClock()
     this.loadSavedCity()
   },
@@ -202,6 +212,10 @@ export default {
     this.themeButtonText = this.isDark ? "浅色模式" : "深色模式"
     this.modeLabel = this.isDark ? "深色" : "浅色"
     setTheme(this.isDark)
+  },
+
+  goHome() {
+    router.push({ uri: "pages/index" })
   },
 
   goNews() {
@@ -233,6 +247,10 @@ export default {
       key: CITY_STORAGE_KEY,
       value: city
     })
+  },
+
+  toggleAlert(idx) {
+    this.expandedAlertIdx = this.expandedAlertIdx === idx ? -1 : idx
   },
 
   openCityPicker() {
@@ -332,6 +350,18 @@ export default {
     getWeather(city).then((info) => {
       setCache(cacheKey, info, 10 * 60 * 1000)
       this.weatherInfo = info
+      this.expandedAlertIdx = -1
+    }).catch(() => {
+      this.weatherInfo = {
+        title: city,
+        subtitle: "天气获取失败",
+        message: "--°C",
+        details: [],
+        detailsExtra: [],
+        indexes: [],
+        forecasts: [],
+        alerts: []
+      }
     })
   }
 }
@@ -420,7 +450,7 @@ text {
 }
 
 .nav-block {
-  height: 176px;
+  height: 240px;
   margin-top: 18px;
   flex-direction: column;
 }
@@ -483,7 +513,7 @@ text {
   height: 40px;
   padding: 0 16px;
   border-radius: 6px;
-  font-size: 20px;
+  font-size: 22px;
   font-weight: bold;
 }
 
@@ -506,7 +536,7 @@ text {
 
 /* 当日主卡片 — 增大容器防裁切 */
 .lead-card {
-  padding: 28px 22px;
+  padding: 32px 24px;
   border-radius: 10px;
   flex-direction: row;
   align-items: center;
@@ -519,20 +549,23 @@ text {
 }
 
 .lead-city {
-  font-size: 28px;
+  font-size: 30px;
   font-weight: bold;
+  line-height: 38px;
 }
 
 .lead-desc {
   margin-top: 6px;
-  font-size: 16px;
+  font-size: 19px;
+  line-height: 26px;
 }
 
 .lead-temp {
-  font-size: 38px;
+  font-size: 42px;
   font-weight: bold;
   color: #0074ff;
   margin-left: 16px;
+  line-height: 50px;
 }
 
 /* 天气数据网格 */
@@ -554,45 +587,65 @@ text {
 }
 
 .detail-label {
-  font-size: 13px;
+  font-size: 15px;
 }
 
 .detail-value {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: bold;
 }
 
 /* 预警 */
 .alert-bar {
   margin-bottom: 12px;
-  padding: 10px 16px;
+  padding: 14px 16px;
   border-radius: 8px;
   background-color: #fff3cd;
+  flex-direction: column;
 }
 
 .alert-text {
-  font-size: 14px;
+  font-size: 19px;
   color: #856404;
+}
+
+.alert-detail-wrap {
+  margin-top: 12px;
+  padding-top: 12px;
+  flex-direction: column;
+}
+
+.alert-detail-title {
+  font-size: 19px;
+  font-weight: bold;
+  line-height: 28px;
+}
+
+.alert-detail {
+  margin-top: 8px;
+  font-size: 18px;
+  line-height: 26px;
 }
 
 /* 7天预报 — 增大行高和间距 */
 .section-card {
   margin-top: 18px;
-  padding: 18px;
+  padding: 20px;
   border-radius: 8px;
   flex-direction: column;
 }
 
 .section-title {
-  font-size: 17px;
+  font-size: 20px;
   font-weight: bold;
-  margin-bottom: 14px;
+  margin-bottom: 20px;
 }
 
 .forecast-row {
+  width: 100%;
   height: 54px;
   margin-bottom: 14px;
-  padding: 0 16px;
+  padding: 0 20px;
   border-radius: 8px;
   flex-direction: row;
   align-items: center;
@@ -600,32 +653,36 @@ text {
 }
 
 .forecast-day {
-  font-size: 15px;
+  font-size: 18px;
 }
 
 .forecast-info {
-  font-size: 18px;
+  font-size: 21px;
   font-weight: bold;
 }
 
 /* 生活指数 — 同样增大间距 */
-.index-row {
-  height: 54px;
+.index-item {
   margin-bottom: 14px;
-  padding: 0 16px;
+  padding: 14px 20px;
   border-radius: 8px;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
 }
 
 .index-name {
-  font-size: 15px;
+  font-size: 16px;
+  margin-bottom: 6px;
 }
 
 .index-brief {
-  font-size: 18px;
+  font-size: 21px;
   font-weight: bold;
+}
+
+.index-detail {
+  margin-top: 10px;
+  font-size: 18px;
+  line-height: 26px;
 }
 
 /* ========== 城市选择器 ========== */
@@ -705,19 +762,16 @@ text {
   font-weight: bold;
 }
 
-/* 省份/城市列表（单列全宽） */
+/* 省份/城市列表（双列） */
 .picker-scroll {
   flex: 1;
   flex-direction: column;
 }
 
-.picker-btn-full {
-  height: 50px;
-  margin-bottom: 12px;
-  border-radius: 8px;
-  background-color: #f0f4f5;
-  font-size: 18px;
-  font-weight: bold;
+.picker-wrap {
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: space-between;
 }
 
 .picker-btn-dark {
