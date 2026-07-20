@@ -385,7 +385,7 @@ text {
 /* ========== 通用卡片 ========== */
 .section-card {
   margin-top: 8px;
-  padding: 8px 12px;
+  padding: 12px 12px;
   border-radius: 5px;
   flex-direction: column;
 }
