@@ -11,10 +11,10 @@ const PROVIDERS = {
     note: "UApiPro天气API，支持中文城市名直接查询。"
   },
   express: {
-    name: "tmini-快递查询",
-    url: "https://tmini.net/api/kuaiok",
+    name: "UApiPro-快递查询",
+    url: "https://uapis.cn/api/v1/misc/tracking/query",
     key: "",
-    note: "tmini快递查询API，可按运单号查询物流信息。"
+    note: "UApiPro快递查询API，支持主流快递公司运单号查询。"
   }
 }
 
@@ -40,130 +40,6 @@ function parseData(data) {
   return data || {}
 }
 
-function request(options) {
-  const url = options.url
-  const method = options.method || "GET"
-  const responseType = options.responseType || "json"
-
-  return new Promise((resolve, reject) => {
-    let isCompleted = false
-
-    // Set a manual 60s timeout
-    const timeoutId = setTimeout(() => {
-      if (!isCompleted) {
-        isCompleted = true
-        reject(new Error("Timeout"))
-      }
-    }, 60000)
-
-    console.log("request: " + method + " " + url)
-    fetch.fetch({
-      url: url,
-      method: method,
-      header: options.header || {},
-      responseType: responseType,
-      success(res) {
-        console.log("request success: code=" + (res.code || res.statusCode) + ", url=" + url)
-        if (isCompleted) return
-        isCompleted = true
-        clearTimeout(timeoutId)
-
-        const code = res.code || res.statusCode
-
-        // 兼容：先尝试 res.data，再尝试 res.result（不同 quickapp 实现可能不同）
-        let data = res.data !== undefined ? res.data : res.result
-
-        // 无论如何都尝试 parse，防止 responseType json 未生效
-        if (typeof data === "string") {
-          data = parseData(data)
-        }
-
-        if (code >= 200 && code < 300) {
-          resolve(data)
-        } else if (data && typeof data === "object" && Object.keys(data).length > 0) {
-          // fallback: 响应体存在且是非空对象，直接使用
-          resolve(data)
-        } else {
-          reject(new Error("HTTP " + code))
-        }
-      },
-      fail(data, code) {
-        if (isCompleted) return
-        isCompleted = true
-        clearTimeout(timeoutId)
-        console.log("request fail: code=" + code + ", url=" + url + ", data=" + JSON.stringify(data))
-
-        reject(new Error("Fetch failed: " + code))
-      }
-    })
-  })
-}
-
-/**
- * Fetch raw text/html
- */
-export function fetchText(url) {
-  return new Promise(function (resolve, reject) {
-    var isCompleted = false
-    var timeoutId = setTimeout(function () {
-      if (!isCompleted) {
-        isCompleted = true
-        reject(new Error("Timeout"))
-      }
-    }, 60000)
-
-    fetch.fetch({
-      url: url,
-      method: "GET",
-      header: {
-        "User-Agent": "Mozilla/5.0 (Linux; Android 10; SM-G975F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.106 Mobile Safari/537.36"
-      },
-      success: function (res) {
-        if (isCompleted) return
-        isCompleted = true
-        clearTimeout(timeoutId)
-
-        var code = res.code || res.statusCode
-        var data = res.data !== undefined ? res.data : res.result
-        var headers = res.headers || {}
-
-        console.log("fetchText 响应 code=" + code + ", url=" + url + ", headers=" + JSON.stringify(headers))
-
-        // 处理 3xx 重定向：尝试从 header 中获取 Location
-        if (code >= 300 && code < 400) {
-          var location = headers["location"] || headers["Location"] || ""
-          if (location) {
-            console.log("fetchText 重定向到: " + location)
-            resolve({ redirect: location })
-            return
-          }
-        }
-
-        // 直接返回原始字符串
-        if (typeof data === "string") {
-          resolve(data)
-        } else if (typeof data === "object" && data !== null) {
-          try {
-            resolve(JSON.stringify(data))
-          } catch (e) {
-            resolve("")
-          }
-        } else {
-          resolve("")
-        }
-      },
-      fail: function (data, code) {
-        if (isCompleted) return
-        isCompleted = true
-        clearTimeout(timeoutId)
-        console.log("fetchText fail: code=" + code + ", url=" + url + ", data=" + JSON.stringify(data))
-
-        reject(new Error("Fetch failed: " + code))
-      }
-    })
-  })
-}
-
 function decodeHtmlEntities(text) {
   if (!text) return ""
   var map = {
@@ -171,7 +47,7 @@ function decodeHtmlEntities(text) {
     "quot": "\"", "apos": "'", "lt": "<", "gt": ">",
     "amp": "&",
     "mdash": "—", "ndash": "–", "hellip": "…",
-    "lsquo": "‘", "rsquo": "’",
+    "lsquo": "'", "rsquo": "'",
     "ldquo": "“", "rdquo": "”",
     "copy": "©", "reg": "®", "trade": "™",
     "times": "×", "divide": "÷",
@@ -182,17 +58,14 @@ function decodeHtmlEntities(text) {
     "bull": "•", "star": "★",
     "lrm": "", "rlm": "", "zwnj": "", "zwj": ""
   }
-  // 命名实体（有无分号都匹配）
   text = text.replace(/&([a-zA-Z]+);?/g, function (m, name) {
     var val = map[name]
     return val !== undefined ? val : m
   })
-  // 数字实体 &#123; 或 &#123
   text = text.replace(/&#(\d+);?/g, function (m, code) {
     var n = parseInt(code, 10)
     return (n >= 32 && n <= 65535) ? String.fromCharCode(n) : m
   })
-  // 十六进制实体 &#x1A; 或 &#x1a
   text = text.replace(/&#x([0-9a-fA-F]+);?/g, function (m, hex) {
     var n = parseInt(hex, 16)
     return (n >= 32 && n <= 65535) ? String.fromCharCode(n) : m
@@ -202,33 +75,25 @@ function decodeHtmlEntities(text) {
 
 function stripHtmlAndFilter(text) {
   if (!text) return ""
-  // 先解码实体，再剥标签
-  let cleanText = decodeHtmlEntities(text)
+  var cleanText = decodeHtmlEntities(text)
   cleanText = cleanText.replace(/<[^>]+>/g, " ")
-
-  let lines = cleanText.split(/[\r\n]+/)
-  let filteredLines = lines.filter((line) => line.indexOf("⬅️") === -1)
-
+  var lines = cleanText.split(/[\r\n]+/)
+  var filteredLines = lines.filter(function (line) { return line.indexOf("⬅️") === -1 })
   return filteredLines.join("\n").trim()
 }
 
 function cleanDescription(text) {
   if (!text) return ""
   var cleaned = decodeHtmlEntities(text)
-  // 剥 HTML 标签
   cleaned = cleaned.replace(/<[^>]+>/g, " ")
-  // 去掉来源标注
   cleaned = cleaned.replace(/来源[：:].*$/gm, "")
   cleaned = cleaned.replace(/编辑[：:].*$/gm, "")
   cleaned = cleaned.replace(/责任编辑[：:].*$/gm, "")
   cleaned = cleaned.replace(/【.*?】/g, "")
-  // 去掉链接和多余空格
   cleaned = cleaned.replace(/https?:\/\/\S+/g, "")
   cleaned = cleaned.replace(/\s+/g, " ").trim()
-  // 截断过长内容
   if (cleaned.length > 120) {
     cleaned = cleaned.substring(0, 120)
-    // 在句号处截断
     var lastDot = cleaned.lastIndexOf("。")
     if (lastDot > 60) {
       cleaned = cleaned.substring(0, lastDot + 1)
@@ -243,7 +108,6 @@ function extractSourceName(url) {
   if (!url) return ""
   try {
     var domain = url.replace(/^https?:\/\//, "").split("/")[0].replace(/^www\./, "")
-    // Map domains to friendly Chinese names
     var nameMap = {
       "finance.sina.com.cn": "新浪财经",
       "news.sina.com.cn": "新浪新闻",
@@ -285,7 +149,6 @@ function extractSourceName(url) {
       "baidu.com": "百度"
     }
     if (nameMap[domain]) return nameMap[domain]
-    // Fallback: return domain without TLD
     var parts = domain.split(".")
     return parts.length >= 2 ? parts[parts.length - 2] : domain
   } catch (e) {
@@ -295,7 +158,6 @@ function extractSourceName(url) {
 
 function formatDate(dateStr) {
   if (!dateStr) return ""
-  // "2026-06-25 04:33:39 +0000" → "06-25"
   var match = dateStr.match(/(\d{4})-(\d{2})-(\d{2})/)
   if (match) {
     return match[2] + "-" + match[3]
@@ -305,10 +167,10 @@ function formatDate(dateStr) {
 
 function normalizeNews(item) {
   if (!item) return null
-  const category = item.category && item.category.length ? item.category.join(" / ") : ""
-  const source = extractSourceName(item.url) || item.author || "未知来源"
-  const title = stripHtmlAndFilter(item.title) || "未命名新闻"
-  const desc = cleanDescription(item.description) || "暂无摘要"
+  var category = item.category && item.category.length ? item.category.join(" / ") : ""
+  var source = extractSourceName(item.url) || item.author || "未知来源"
+  var title = stripHtmlAndFilter(item.title) || "未命名新闻"
+  var desc = cleanDescription(item.description) || "暂无摘要"
   return {
     id: item.id || "",
     title: title,
@@ -320,8 +182,8 @@ function normalizeNews(item) {
   }
 }
 
-// Trusted Chinese domestic news domains
-const DOMAIN_WHITELIST = [
+// 中国媒体域名白名单
+var DOMAIN_WHITELIST = [
   "sina.com.cn", "finance.sina.com.cn", "news.sina.com.cn",
   "sohu.com",
   "163.com", "news.163.com",
@@ -361,13 +223,9 @@ const DOMAIN_WHITELIST = [
 function extractDomain(url) {
   if (!url) return ""
   try {
-    // Remove protocol
     var domain = url.replace(/^https?:\/\//, "")
-    // Remove path
     domain = domain.split("/")[0]
-    // Remove port
     domain = domain.split(":")[0]
-    // Remove www.
     domain = domain.replace(/^www\./, "")
     return domain.toLowerCase()
   } catch (e) {
@@ -386,41 +244,55 @@ function isTrustedDomain(url) {
   return false
 }
 
-export function getLatestNews(options) {
-  const params = options || {}
-  const categories = params.categories && params.categories.length ? params.categories.join(",") : ""
+/**
+ * 网络请求 - 使用 success/fail 回调模式（与 detail.ux 一致）
+ * 不用 .then() 链，避免框架 native 回调丢失
+ */
+function request(options) {
+  var url = options.url
+  var method = options.method || "GET"
+  var responseType = options.responseType || "json"
 
-  const query = encodeQuery({
-    language: "zh",
-    country: "CN",
-    category: categories,
-    page_size: params.pageSize || 20,
-    apiKey: CURRENTS_API_KEY.trim()
-  })
+  console.log("request: " + method + " " + url)
 
-  return request({
-    url: CURRENTS_BASE_URL + "/latest-news?" + query
-  }).then((data) => {
-    if (!data || data.status !== "ok" || !data.news) {
-      return []
-    }
-    var filtered = data.news
-      .map(normalizeNews)
-      .filter(function (item) {
-        if (!item) return false
-        if (!isTrustedDomain(item.url)) {
-          return false
+  return new Promise(function (resolve, reject) {
+    fetch.fetch({
+      url: url,
+      method: method,
+      header: options.header || {},
+      responseType: responseType,
+      success: function (res) {
+        console.log("request success: code=" + (res.code || res.statusCode) + ", url=" + url)
+        try {
+          var code = res.code || res.statusCode
+          var data = res.data !== undefined ? res.data : res.result
+
+          if (typeof data === "string") {
+            data = parseData(data)
+          }
+
+          if (code >= 200 && code < 300) {
+            resolve(data)
+          } else if (data && typeof data === "object" && Object.keys(data).length > 0) {
+            resolve(data)
+          } else {
+            reject(new Error("HTTP " + code))
+          }
+        } catch (e) {
+          reject(e)
         }
-        // 过滤掉 description 为空或和 title 一样的新闻
-        if (!item.description || item.description === item.title) {
-          return false
-        }
-        return true
-      })
-    return filtered
+      },
+      fail: function (data, code) {
+        console.log("request fail: url=" + url + ", code=" + code)
+        reject(new Error("network error"))
+      }
+    })
   })
 }
 
+/**
+ * 获取天气（Promise 写法）
+ */
 export function getWeather(city) {
   var query = encodeQuery({
     city: city,
@@ -431,7 +303,7 @@ export function getWeather(city) {
 
   return request({
     url: PROVIDERS.weather.url + "?" + query
-  }).then((data) => {
+  }).then(function (data) {
     if (!data || !data.city) {
       return {
         ready: false,
@@ -465,24 +337,12 @@ export function getWeather(city) {
     if (data.life_indices) {
       var indices = data.life_indices
       var indexNames = {
-        "clothing": "穿衣",
-        "uv": "紫外线",
-        "car_wash": "洗车",
-        "drying": "晾晒",
-        "air_conditioner": "空调",
-        "cold_risk": "感冒",
-        "exercise": "运动",
-        "comfort": "舒适度",
-        "travel": "出行",
-        "fishing": "钓鱼",
-        "allergy": "过敏",
-        "sunscreen": "防晒",
-        "mood": "心情",
-        "beer": "啤酒",
-        "umbrella": "雨伞",
-        "traffic": "交通",
-        "air_purifier": "空气净化器",
-        "pollen": "花粉"
+        "clothing": "穿衣", "uv": "紫外线", "car_wash": "洗车",
+        "drying": "晾晒", "air_conditioner": "空调", "cold_risk": "感冒",
+        "exercise": "运动", "comfort": "舒适度", "travel": "出行",
+        "fishing": "钓鱼", "allergy": "过敏", "sunscreen": "防晒",
+        "mood": "心情", "beer": "啤酒", "umbrella": "雨伞",
+        "traffic": "交通", "air_purifier": "空气净化器", "pollen": "花粉"
       }
       for (var key in indices) {
         if (indices[key] && indices[key].brief) {
@@ -548,136 +408,54 @@ export function getWeather(city) {
   })
 }
 
-export function getExpress(trackingNo) {
-  const provider = PROVIDERS.express
-  if (!trackingNo) {
-    return Promise.resolve({
-      ready: false,
-      title: "请输入运单号",
-      subtitle: provider.name,
-      message: "请在下方输入框输入快递运单号进行查询",
-      details: ["支持主流快递公司", "输入运单号后点击查询按钮"]
-    })
-  }
+/**
+ * 获取新闻（Promise 写法）
+ */
+export function getLatestNews(options) {
+  var params = options || {}
+  var categories = params.categories && params.categories.length ? params.categories.join(",") : ""
 
-  const query = encodeQuery({
-    trackingNo: trackingNo,
-    ckey: provider.key
+  var query = encodeQuery({
+    language: "zh",
+    country: "CN",
+    category: categories,
+    page_size: params.pageSize || 20,
+    apiKey: CURRENTS_API_KEY.trim()
   })
+
   return request({
-    url: provider.url + "?" + query
-  }).then((data) => {
-
-    // tmini API 返回格式处理
-    // 成功状态码: "0000000000"
-    if (data && data.code === "0000000000" && data.data) {
-      const expressData = data.data
-      const packageList = expressData.packageInfoList || []
-
-      if (packageList.length === 0) {
-        return {
-          ready: false,
-          title: trackingNo,
-          subtitle: "未找到物流信息",
-          message: "该运单号暂无物流信息",
-          status: "",
-          details: []
-        }
-      }
-
-      // 取第一个包裹的信息
-      const pkg = packageList[0]
-      const trackingDetails = pkg.trackingDetails || []
-
-      // 格式化时间 UTC -> UTC+8 (20260512111740 -> 2026-05-12 19:17:40)
-      function formatTime(timeStr) {
-        if (!timeStr || timeStr.length !== 14) return timeStr || ""
-        var y = parseInt(timeStr.substring(0, 4), 10)
-        var mo = parseInt(timeStr.substring(4, 6), 10) - 1
-        var d = parseInt(timeStr.substring(6, 8), 10)
-        var h = parseInt(timeStr.substring(8, 10), 10) + 8
-        var mi = parseInt(timeStr.substring(10, 12), 10)
-        var s = parseInt(timeStr.substring(12, 14), 10)
-        // 处理溢出
-        if (h >= 24) { h -= 24; d += 1 }
-        // 简单处理月份溢出（不考虑年份溢出）
-        var daysInMonth = [31,28,31,30,31,30,31,31,30,31,30,31]
-        if (y % 4 === 0 && (y % 100 !== 0 || y % 400 === 0)) daysInMonth[1] = 29
-        if (d > daysInMonth[mo]) { d = 1; mo += 1 }
-        if (mo > 11) { mo = 0; y += 1 }
-        var pad2 = function(v) { return v < 10 ? "0" + v : "" + v }
-        return y + "-" + pad2(mo + 1) + "-" + pad2(d) + " " + pad2(h) + ":" + pad2(mi) + ":" + pad2(s)
-      }
-
-      // 状态映射
-      function getStateText(state) {
-        var s = (state || "").toUpperCase()
-        var stateMap = {
-          "ACCEPT": "已揽收",
-          "TRANSIT": "正在运输中",
-          "DELIVERING": "待取件",
-          "FINISH": "已签收",
-          "CANCEL": "已取消",
-          "ABNORMAL": "物流运输异常",
-          "FAILED": "物流运输异常"
-        }
-        return stateMap[s] || state || ""
-      }
-
-      // 快递公司名修正映射（API 返回不准时用）
-      const CP_NAME_FIX = {
-        "菜鸟裹裹": "中国邮政",
-        "菜鸟": "中国邮政",
-        "YZ": "中国邮政",
-        "YZBK": "中国邮政",
-        "EMS": "中国邮政EMS"
-      }
-
-      var rawCpName = pkg.cpName || pkg.cp || ""
-      var cpName = CP_NAME_FIX[rawCpName] || rawCpName || "快递公司"
-
-      return {
-        ready: true,
-        title: trackingNo,
-        subtitle: cpName,
-        message: pkg.operateMessage || "暂无最新状态",
-        status: getStateText(pkg.state || ""),
-        details: trackingDetails.map((item) => {
-          return { time: formatTime(item.time), text: item.context || "" }
-        })
-      }
-    } else {
-      // API 返回错误或格式不符
-      const errorMsg = data && data.desc ? data.desc : "查询失败，请检查运单号"
-      return {
-        ready: false,
-        title: trackingNo,
-        subtitle: "查询失败",
-        message: errorMsg,
-        status: "",
-        details: []
-      }
+    url: CURRENTS_BASE_URL + "/latest-news?" + query
+  }).then(function (data) {
+    if (!data || data.status !== "ok" || !data.news) {
+      return []
     }
-  }).catch((err) => {
-    return {
-      ready: false,
-      title: trackingNo,
-      subtitle: "查询出错",
-      message: "网络请求失败: " + err.message,
-      status: "",
-      details: []
-    }
+    var filtered = data.news
+      .map(normalizeNews)
+      .filter(function (item) {
+        if (!item) return false
+        if (!isTrustedDomain(item.url)) {
+          return false
+        }
+        if (!item.description || item.description === item.title) {
+          return false
+        }
+        return true
+      })
+    return filtered
   })
 }
 
+/**
+ * 获取历史上的今天（Promise 写法）
+ */
 export function getTodayInHistory() {
   return request({
     url: "https://tmini.net/api/today?type=json"
-  }).then((data) => {
+  }).then(function (data) {
     if (!data || data.code !== 200 || !data.events) {
       return []
     }
-    return data.events.slice(0, 5).map((item) => {
+    var result = data.events.slice(0, 5).map(function (item) {
       return {
         title: item.title || "",
         year: item.year || "",
@@ -685,7 +463,65 @@ export function getTodayInHistory() {
         link: item.link || ""
       }
     })
-  }).catch(() => {
-    return []
+    return result
+  })
+}
+
+/**
+ * 获取快递信息（Promise 写法）
+ */
+export function getExpress(trackingNo) {
+  var provider = PROVIDERS.express
+  if (!trackingNo) {
+    return Promise.resolve({
+      ready: false,
+      title: "请输入运单号",
+      subtitle: provider.name,
+      details: ["支持主流快递公司", "输入运单号后点击查询按钮"]
+    })
+  }
+
+  var query = encodeQuery({
+    tracking_number: trackingNo
+  })
+
+  return request({
+    url: provider.url + "?" + query
+  }).then(function (data) {
+    if (data && data.tracking_number) {
+      var tracks = data.tracks || []
+      var carrierName = data.carrier_name || "快递公司"
+      var statusText = data.status || ""
+
+      return {
+        ready: true,
+        title: data.tracking_number || trackingNo,
+        subtitle: carrierName,
+        status: statusText,
+        details: tracks.map(function (item, index) {
+          return {
+            time: item.time || "",
+            text: item.context || "",
+            isLatest: index === 0
+          }
+        })
+      }
+    } else {
+      return {
+        ready: false,
+        title: trackingNo,
+        subtitle: "查询失败",
+        status: "",
+        details: []
+      }
+    }
+  }).catch(function (err) {
+    return {
+      ready: false,
+      title: trackingNo,
+      subtitle: "查询出错",
+      status: "",
+      details: []
+    }
   })
 }

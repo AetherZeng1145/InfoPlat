@@ -58,7 +58,15 @@ import router from "@system.router"
 import storage from "@system.storage"
 import { getWeather, getLatestNews, getTodayInHistory } from "../../common/services"
 import { getThemeSync, setTheme } from "../../common/theme"
-import { getCached, setCache } from "../../common/cache"
+
+// 测试录音模块是否存在
+var _record = null
+try {
+  _record = require("@system.record")
+  console.log("[TEST] system.record 加载成功: " + JSON.stringify(Object.keys(_record)))
+} catch (e) {
+  console.log("[TEST] system.record 不存在: " + e.message)
+}
 
 function pad(value) {
   return value < 10 ? "0" + value : "" + value
@@ -92,9 +100,11 @@ export default {
   onShow() {
     this.updateClock()
     this.updateDate()
+    // 串行调用，避免并发 fetch 导致框架崩溃
     this.loadWeather()
-    this.loadNews()
-    this.loadHistory()
+  },
+
+  onDestroy() {
   },
 
   updateClock() {
@@ -156,42 +166,34 @@ export default {
   },
 
   fetchWeather(city) {
-    var cacheKey = "weather_" + city
-    var cached = getCached(cacheKey)
-    if (cached) {
-      this.weatherSummary = cached.title + " " + cached.message + " " + cached.subtitle
-      return
-    }
-    this.weatherSummary = city + " 获取天气中..."
-    getWeather(city).then((info) => {
-      setCache(cacheKey, info, 10 * 60 * 1000)
-      this.weatherSummary = info.title + " " + info.message + " " + info.subtitle
-    }).catch(() => {
-      this.weatherSummary = city + " 天气获取失败"
+    var self = this
+    self.weatherSummary = city + " 获取天气中..."
+    getWeather(city).then(function (info) {
+      self.weatherSummary = info.title + " " + info.message + " " + info.subtitle
+      // 天气加载完后，加载新闻
+      self.loadNews()
+    }).catch(function () {
+      self.weatherSummary = city + " 天气获取失败"
+      // 失败也要继续加载新闻
+      self.loadNews()
     })
   },
 
   loadNews() {
-    var cacheKey = "news_politics"
-    var cached = getCached(cacheKey)
-    if (cached && cached.length) {
-      var item = cached[0]
-      this.newsTitle = item.title
-      this.newsSource = item.source + " · " + item.published
-      this.newsUrl = item.url
-      this.newsDesc = item.description
-      return
-    }
-    getLatestNews({ categories: ["politics"], pageSize: 20 }).then((list) => {
+    var self = this
+    getLatestNews({ categories: ["politics"], pageSize: 20 }).then(function (list) {
       if (list && list.length) {
-        setCache(cacheKey, list, 5 * 60 * 1000)
-        this.newsTitle = list[0].title
-        this.newsSource = list[0].source + " · " + list[0].published
-        this.newsUrl = list[0].url
-        this.newsDesc = list[0].description
+        self.newsTitle = list[0].title
+        self.newsSource = list[0].source + " · " + list[0].published
+        self.newsUrl = list[0].url
+        self.newsDesc = list[0].description
       }
-    }).catch(() => {
-      this.newsTitle = "新闻获取失败"
+      // 新闻加载完后，加载历史
+      self.loadHistory()
+    }).catch(function () {
+      self.newsTitle = "新闻获取失败"
+      // 失败也要继续加载历史
+      self.loadHistory()
     })
   },
 
@@ -203,25 +205,16 @@ export default {
   },
 
   loadHistory() {
-    var cacheKey = "today_history"
-    var cached = getCached(cacheKey)
-    if (cached && cached.length) {
-      console.info("[InfoPlat] Index history from cache: " + cached.length + " items")
-      this.historyList = cached
-      return
-    }
-    console.info("[InfoPlat] Index history fetching...")
-    getTodayInHistory().then((list) => {
-      console.info("[InfoPlat] Index history got: " + (list ? list.length : 0) + " items")
+    var self = this
+    getTodayInHistory().then(function (list) {
       if (list && list.length) {
-        console.info("[InfoPlat] Index history first item: " + JSON.stringify(list[0]))
-        var formatted = list.map((item) => {
-          return { title: item.title, year: item.year, yearLabel: this.formatHistoryYear(item.year), desc: item.desc, link: item.link }
+        var formatted = list.map(function (item) {
+          return { title: item.title, year: item.year, yearLabel: self.formatHistoryYear(item.year), desc: item.desc, link: item.link }
         })
-        console.info("[InfoPlat] Index history formatted first: " + JSON.stringify(formatted[0]))
-        setCache(cacheKey, formatted, 30 * 60 * 1000)
-        this.historyList = formatted
+        self.historyList = formatted
       }
+    }).catch(function () {
+      // 历史加载失败，静默处理
     })
   }
 }

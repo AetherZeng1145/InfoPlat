@@ -37,7 +37,6 @@
             <text class="express-sep {{ isDark ? 'text-dark-sub' : 'text-light-sub' }}">|</text>
             <text class="express-status">{{ expressInfo.status }}</text>
           </div>
-          <text class="express-msg {{ isDark ? 'text-dark-sub' : 'text-light-sub' }}">{{ expressInfo.message }}</text>
           <div class="timeline">
             <div class="timeline-item" for="{{ expressInfo.details }}">
               <div class="timeline-left">
@@ -45,8 +44,8 @@
                 <div class="timeline-line"></div>
               </div>
               <div class="timeline-right">
-                <text class="timeline-time {{ isDark ? 'text-dark-sub' : 'text-light-sub' }}">{{ $item.time }}</text>
-                <text class="timeline-text {{ isDark ? 'text-dark' : 'text-light' }}">{{ $item.text }}</text>
+                <text class="timeline-time {{ $item.isLatest ? 'timeline-time-latest' : (isDark ? 'text-dark-sub' : 'text-light-sub') }}">{{ $item.time }}</text>
+                <text class="timeline-text {{ $item.isLatest ? 'timeline-text-latest' : (isDark ? 'text-dark' : 'text-light') }}">{{ $item.text }}</text>
               </div>
             </div>
           </div>
@@ -61,55 +60,70 @@
           </div>
         </div>
         <div class="keyboard {{ isDark ? 'keyboard-dark' : '' }}" if="{{ showKeyboard }}">
-          <div class="kb-row">
-            <input class="kb-key" type="button" value="1" onclick="onKeyTap('1')" />
-            <input class="kb-key" type="button" value="2" onclick="onKeyTap('2')" />
-            <input class="kb-key" type="button" value="3" onclick="onKeyTap('3')" />
-            <input class="kb-key" type="button" value="4" onclick="onKeyTap('4')" />
-            <input class="kb-key" type="button" value="5" onclick="onKeyTap('5')" />
-            <input class="kb-key" type="button" value="6" onclick="onKeyTap('6')" />
-            <input class="kb-key" type="button" value="7" onclick="onKeyTap('7')" />
-            <input class="kb-key" type="button" value="8" onclick="onKeyTap('8')" />
-            <input class="kb-key" type="button" value="9" onclick="onKeyTap('9')" />
-            <input class="kb-key" type="button" value="0" onclick="onKeyTap('0')" />
-            <input class="kb-key" type="button" value="-" onclick="onKeyTap('-')" />
+          <!-- 九宫格数字键盘 -->
+          <div class="kb-container" if="{{ isNumberKeyboard }}">
+            <div class="kb-row">
+              <input class="kb-key" type="button" value="1" onclick="onKeyTap('1')" />
+              <input class="kb-key" type="button" value="2" onclick="onKeyTap('2')" />
+              <input class="kb-key" type="button" value="3" onclick="onKeyTap('3')" />
+            </div>
+            <div class="kb-row">
+              <input class="kb-key" type="button" value="4" onclick="onKeyTap('4')" />
+              <input class="kb-key" type="button" value="5" onclick="onKeyTap('5')" />
+              <input class="kb-key" type="button" value="6" onclick="onKeyTap('6')" />
+            </div>
+            <div class="kb-row">
+              <input class="kb-key" type="button" value="7" onclick="onKeyTap('7')" />
+              <input class="kb-key" type="button" value="8" onclick="onKeyTap('8')" />
+              <input class="kb-key" type="button" value="9" onclick="onKeyTap('9')" />
+            </div>
+            <div class="kb-row">
+              <input class="kb-key" type="button" value="-" onclick="onKeyTap('-')" />
+              <input class="kb-key" type="button" value="0" onclick="onKeyTap('0')" />
+              <input class="kb-key-switch" type="button" value="ABC" onclick="switchKeyboard" />
+            </div>
           </div>
-          <div class="kb-row">
-            <input class="kb-key" type="button" value="Q" onclick="onKeyTap('Q')" />
-            <input class="kb-key" type="button" value="W" onclick="onKeyTap('W')" />
-            <input class="kb-key" type="button" value="E" onclick="onKeyTap('E')" />
-            <input class="kb-key" type="button" value="R" onclick="onKeyTap('R')" />
-            <input class="kb-key" type="button" value="T" onclick="onKeyTap('T')" />
-            <input class="kb-key" type="button" value="Y" onclick="onKeyTap('Y')" />
-            <input class="kb-key" type="button" value="U" onclick="onKeyTap('U')" />
-            <input class="kb-key" type="button" value="I" onclick="onKeyTap('I')" />
-            <input class="kb-key" type="button" value="O" onclick="onKeyTap('O')" />
-            <input class="kb-key" type="button" value="P" onclick="onKeyTap('P')" />
-          </div>
-          <div class="kb-row">
-            <input class="kb-key" type="button" value="A" onclick="onKeyTap('A')" />
-            <input class="kb-key" type="button" value="S" onclick="onKeyTap('S')" />
-            <input class="kb-key" type="button" value="D" onclick="onKeyTap('D')" />
-            <input class="kb-key" type="button" value="F" onclick="onKeyTap('F')" />
-            <input class="kb-key" type="button" value="G" onclick="onKeyTap('G')" />
-            <input class="kb-key" type="button" value="H" onclick="onKeyTap('H')" />
-            <input class="kb-key" type="button" value="J" onclick="onKeyTap('J')" />
-            <input class="kb-key" type="button" value="K" onclick="onKeyTap('K')" />
-            <input class="kb-key" type="button" value="L" onclick="onKeyTap('L')" />
-          </div>
-          <div class="kb-row">
-            <input class="kb-key" type="button" value="Z" onclick="onKeyTap('Z')" />
-            <input class="kb-key" type="button" value="X" onclick="onKeyTap('X')" />
-            <input class="kb-key" type="button" value="C" onclick="onKeyTap('C')" />
-            <input class="kb-key" type="button" value="V" onclick="onKeyTap('V')" />
-            <input class="kb-key" type="button" value="B" onclick="onKeyTap('B')" />
-            <input class="kb-key" type="button" value="N" onclick="onKeyTap('N')" />
-            <input class="kb-key" type="button" value="M" onclick="onKeyTap('M')" />
-          </div>
-          <div class="kb-row">
-            <input class="kb-key-wide" type="button" value="退格" onclick="onKeyTap('DEL')" />
-            <input class="kb-key-wide" type="button" value="清空" onclick="onKeyTap('CLR')" />
-            <input class="kb-key-ok" type="button" value="确定" onclick="onKeyTap('OK')" />
+          <!-- 26键字母键盘 -->
+          <div class="kb-container" if="{{ !isNumberKeyboard }}">
+            <div class="kb-row">
+              <input class="kb-key-sm" type="button" value="Q" onclick="onKeyTap('Q')" />
+              <input class="kb-key-sm" type="button" value="W" onclick="onKeyTap('W')" />
+              <input class="kb-key-sm" type="button" value="E" onclick="onKeyTap('E')" />
+              <input class="kb-key-sm" type="button" value="R" onclick="onKeyTap('R')" />
+              <input class="kb-key-sm" type="button" value="T" onclick="onKeyTap('T')" />
+              <input class="kb-key-sm" type="button" value="Y" onclick="onKeyTap('Y')" />
+              <input class="kb-key-sm" type="button" value="U" onclick="onKeyTap('U')" />
+              <input class="kb-key-sm" type="button" value="I" onclick="onKeyTap('I')" />
+              <input class="kb-key-sm" type="button" value="O" onclick="onKeyTap('O')" />
+              <input class="kb-key-sm" type="button" value="P" onclick="onKeyTap('P')" />
+            </div>
+            <div class="kb-row">
+              <input class="kb-key-sm" type="button" value="A" onclick="onKeyTap('A')" />
+              <input class="kb-key-sm" type="button" value="S" onclick="onKeyTap('S')" />
+              <input class="kb-key-sm" type="button" value="D" onclick="onKeyTap('D')" />
+              <input class="kb-key-sm" type="button" value="F" onclick="onKeyTap('F')" />
+              <input class="kb-key-sm" type="button" value="G" onclick="onKeyTap('G')" />
+              <input class="kb-key-sm" type="button" value="H" onclick="onKeyTap('H')" />
+              <input class="kb-key-sm" type="button" value="J" onclick="onKeyTap('J')" />
+              <input class="kb-key-sm" type="button" value="K" onclick="onKeyTap('K')" />
+              <input class="kb-key-sm" type="button" value="L" onclick="onKeyTap('L')" />
+            </div>
+            <div class="kb-row">
+              <input class="kb-key-sm" type="button" value="Z" onclick="onKeyTap('Z')" />
+              <input class="kb-key-sm" type="button" value="X" onclick="onKeyTap('X')" />
+              <input class="kb-key-sm" type="button" value="C" onclick="onKeyTap('C')" />
+              <input class="kb-key-sm" type="button" value="V" onclick="onKeyTap('V')" />
+              <input class="kb-key-sm" type="button" value="B" onclick="onKeyTap('B')" />
+              <input class="kb-key-sm" type="button" value="N" onclick="onKeyTap('N')" />
+              <input class="kb-key-sm" type="button" value="M" onclick="onKeyTap('M')" />
+              <input class="kb-key-sm" type="button" value="-" onclick="onKeyTap('-')" />
+            </div>
+            <div class="kb-row">
+              <input class="kb-key-switch" type="button" value="123" onclick="switchKeyboard" />
+              <input class="kb-key-wide" type="button" value="退格" onclick="onKeyTap('DEL')" />
+              <input class="kb-key-wide" type="button" value="清空" onclick="onKeyTap('CLR')" />
+              <input class="kb-key-ok" type="button" value="确定" onclick="onKeyTap('OK')" />
+            </div>
           </div>
         </div>
       </div>
@@ -138,11 +152,11 @@ export default {
     hasError: false,
     errorText: "",
     showKeyboard: false,
+    isNumberKeyboard: true,
     savedList: [],
     expressInfo: {
       title: "请输入运单号",
-      subtitle: "tmini-快递查询",
-      message: "请在下方输入框输入快递运单号进行查询",
+      subtitle: "UApiPro-快递查询",
       status: "",
       details: []
     }
@@ -158,6 +172,13 @@ export default {
 
   onShow() {
     this.updateClock()
+    // 订阅物理按键导航
+    
+  },
+
+  onDestroy() {
+    // 取消导航订阅
+    
   },
 
   updateClock() {
@@ -188,6 +209,10 @@ export default {
     this.showKeyboard = !this.showKeyboard
   },
 
+  switchKeyboard() {
+    this.isNumberKeyboard = !this.isNumberKeyboard
+  },
+
   onKeyTap(key) {
     if (key === "DEL") {
       if (this.trackingNo.length > 0) {
@@ -207,8 +232,7 @@ export default {
     if (!trackingNo) {
       this.expressInfo = {
         title: "请输入运单号",
-        subtitle: "tmini-快递查询",
-        message: "请在下方输入框输入快递运单号进行查询",
+        subtitle: "UApiPro-快递查询",
         status: "",
         details: []
       }
@@ -219,14 +243,15 @@ export default {
     this.expressLoading = true
     this.expressStateText = "正在查询快递信息"
 
-    getExpress(trackingNo).then((info) => {
-      this.expressInfo = info
-      this.expressLoading = false
-      this.saveToList(trackingNo)
-    }).catch((err) => {
-      this.expressLoading = false
-      this.hasError = true
-      this.errorText = "快递查询失败: " + err.message
+    var self = this
+    getExpress(trackingNo).then(function (info) {
+      self.expressInfo = info
+      self.expressLoading = false
+      self.saveToList(trackingNo)
+    }).catch(function (err) {
+      self.expressLoading = false
+      self.hasError = true
+      self.errorText = "快递查询失败"
     })
   },
 
@@ -478,12 +503,6 @@ text {
   font-weight: bold;
 }
 
-.express-msg {
-  margin-top: 4px;
-  font-size: 12px;
-  line-height: 15px;
-}
-
 .timeline {
   margin-top: 8px;
   flex-direction: column;
@@ -528,7 +547,16 @@ text {
 
 .timeline-text {
   font-size: 10px;
-  line-height: 13px;
+}
+
+.timeline-time-latest {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.timeline-text-latest {
+  font-size: 14px;
+  font-weight: bold;
 }
 
 .saved-section {
@@ -592,7 +620,6 @@ text {
 }
 
 .keyboard {
-  flex: 1;
   flex-direction: column;
   justify-content: center;
   padding: 6px 8px;
@@ -601,46 +628,74 @@ text {
   background-color: #eef2f4;
 }
 
+.kb-container {
+  flex-direction: column;
+}
+
 .kb-row {
-  height: 22px;
-  margin-bottom: 3px;
+  height: 26px;
+  margin-bottom: 4px;
   flex-direction: row;
   justify-content: center;
   align-items: center;
 }
 
 .kb-key {
-  width: 22px;
-  height: 20px;
-  margin: 0 2px;
-  border-radius: 3px;
+  width: 28px;
+  height: 24px;
+  margin: 0 3px;
+  border-radius: 4px;
   background-color: #e8eef0;
+  color: #172026;
+  font-size: 12px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.kb-key-wide {
+  width: 50px;
+  height: 24px;
+  margin: 0 3px;
+  border-radius: 4px;
+  background-color: #d0d8dc;
   color: #172026;
   font-size: 11px;
   font-weight: bold;
   text-align: center;
 }
 
-.kb-key-wide {
-  width: 42px;
-  height: 20px;
-  margin: 0 2px;
-  border-radius: 3px;
-  background-color: #d0d8dc;
-  color: #172026;
-  font-size: 10px;
+.kb-key-ok {
+  width: 50px;
+  height: 24px;
+  margin: 0 3px;
+  border-radius: 4px;
+  background-color: #0074ff;
+  color: #ffffff;
+  font-size: 11px;
   font-weight: bold;
   text-align: center;
 }
 
-.kb-key-ok {
-  width: 42px;
-  height: 20px;
-  margin: 0 2px;
-  border-radius: 3px;
+.kb-key-switch {
+  width: 38px;
+  height: 24px;
+  margin: 0 3px;
+  border-radius: 4px;
   background-color: #0074ff;
   color: #ffffff;
-  font-size: 10px;
+  font-size: 11px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.kb-key-sm {
+  width: 22px;
+  height: 24px;
+  margin: 0 2px;
+  border-radius: 4px;
+  background-color: #e8eef0;
+  color: #172026;
+  font-size: 11px;
   font-weight: bold;
   text-align: center;
 }
@@ -652,6 +707,16 @@ text {
 
 .keyboard-dark .kb-key-wide {
   background-color: #333333;
+  color: #edf4f4;
+}
+
+.keyboard-dark .kb-key-switch {
+  background-color: #0074ff;
+  color: #ffffff;
+}
+
+.keyboard-dark .kb-key-sm {
+  background-color: #2a2a2a;
   color: #edf4f4;
 }
 

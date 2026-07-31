@@ -143,7 +143,6 @@ import router from "@system.router"
 import storage from "@system.storage"
 import { getWeather } from "../../common/services"
 import { getThemeSync, initTheme, setTheme } from "../../common/theme"
-import { getCached, setCache } from "../../common/cache"
 import { regions } from "../../common/cities"
 
 function pad(value) {
@@ -193,6 +192,13 @@ export default {
 
   onShow() {
     this.updateClock()
+    // 订阅物理按键导航
+    
+  },
+
+  onDestroy() {
+    // 取消导航订阅
+    
   },
 
   updateClock() {
@@ -333,19 +339,13 @@ export default {
   },
 
   loadWeatherData() {
-    var city = this.selectedCity
-    var cacheKey = "weather_" + city
-    var cached = getCached(cacheKey)
-    if (cached) {
-      this.weatherInfo = cached
-      return
-    }
-    getWeather(city).then((info) => {
-      setCache(cacheKey, info, 10 * 60 * 1000)
-      this.weatherInfo = info
-      this.expandedAlertIdx = -1
-    }).catch(() => {
-      this.weatherInfo = {
+    var self = this
+    var city = self.selectedCity
+    getWeather(city).then(function (info) {
+      self.weatherInfo = info
+      self.expandedAlertIdx = -1
+    }).catch(function () {
+      self.weatherInfo = {
         title: city,
         subtitle: "天气获取失败",
         message: "--°C",

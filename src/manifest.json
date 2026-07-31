@@ -24,6 +24,9 @@
     },
     {
       "name": "system.storage"
+    },
+    {
+      "name": "system.record"
     }
   ],
   "config": {

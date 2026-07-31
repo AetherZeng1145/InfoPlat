@@ -84,7 +84,6 @@
 import router from "@system.router"
 import { getLatestNews } from "../../common/services"
 import { getThemeSync, initTheme, setTheme } from "../../common/theme"
-import { getCached, setCache } from "../../common/cache"
 
 function pad(value) {
   return value < 10 ? "0" + value : "" + value
@@ -131,6 +130,9 @@ export default {
   onShow() {
     this.loadNewsPolitics()
     this.updateClock()
+  },
+
+  onDestroy() {
   },
 
   updateClock() {
@@ -212,38 +214,25 @@ export default {
   },
 
   loadNews(categories) {
-    var cacheKey = "news_" + categories.join(",")
-    var cached = getCached(cacheKey)
-    if (cached) {
-      this.newsList = cached.length > 1 ? cached.slice(1) : []
-      this.leadNews = cached.length ? cached[0] : emptyNews()
-      this.loading = false
-      this.hasError = false
-      this.showNewsContent = true
-      return
-    }
-
-    this.loading = true
-    this.hasError = false
-    this.showNewsContent = false
-    this.stateText = "正在请求新闻"
+    var self = this
+    self.loading = true
+    self.hasError = false
+    self.showNewsContent = false
+    self.stateText = "正在请求新闻"
     getLatestNews({
       categories: categories,
       pageSize: 20
+    }).then(function (list) {
+      self.newsList = list.length > 1 ? list.slice(1) : []
+      self.leadNews = list.length ? list[0] : emptyNews()
+      self.loading = false
+      self.hasError = false
+      self.showNewsContent = true
+    }).catch(function (err) {
+      self.loading = false
+      self.hasError = true
+      self.errorText = "新闻获取失败"
     })
-      .then((list) => {
-        setCache(cacheKey, list, 5 * 60 * 1000)
-        this.newsList = list.length > 1 ? list.slice(1) : []
-        this.leadNews = list.length ? list[0] : emptyNews()
-        this.loading = false
-        this.hasError = false
-        this.showNewsContent = true
-      })
-      .catch((err) => {
-        this.loading = false
-        this.hasError = true
-        this.errorText = "新闻获取失败: " + err.message
-      })
   }
 }
 </script>
