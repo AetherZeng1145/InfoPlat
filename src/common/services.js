@@ -294,12 +294,15 @@ function request(options) {
  * 获取天气（Promise 写法）
  */
 export function getWeather(city) {
-  var query = encodeQuery({
-    city: city,
+  var params = {
     extended: true,
     forecast: true,
     indices: true
-  })
+  }
+  if (city) {
+    params.city = city
+  }
+  var query = encodeQuery(params)
 
   return request({
     url: PROVIDERS.weather.url + "?" + query
@@ -328,6 +331,10 @@ export function getWeather(city) {
     var vis = data.visibility !== undefined ? data.visibility + "km" : "--"
     var pressure = data.pressure !== undefined ? data.pressure + "hPa" : "--"
     var district = data.city || city
+    // IP 定位时，显示 city·district（如"重庆城区·永川区"）
+    if (!city && data.district) {
+      district = data.city + "·" + data.district
+    }
     var aqi = data.aqi || 0
     var pm25 = data.air_pollutants ? data.air_pollutants.pm25 : 0
     var pm10 = data.air_pollutants ? data.air_pollutants.pm10 : 0
@@ -373,9 +380,11 @@ export function getWeather(city) {
       for (var j = 0; j < data.alerts.length; j++) {
         var alert = data.alerts[j]
         alerts.push({
-          title: alert.type + alert.level + " 正在生效",
+          title: alert.type + alert.level + "预警 正在生效",
           alertTitle: alert.title || "",
-          desc: alert.text || ""
+          desc: alert.text || "",
+          level: alert.level || "蓝色",
+          type: alert.type || "未知"
         })
       }
     }

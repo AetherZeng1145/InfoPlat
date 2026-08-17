@@ -315,11 +315,11 @@ export default {
 }
 
 .text-dark-sub {
-  color: #aebdc2;
+  color: #b8c9d0;
 }
 
 .text-light-sub {
-  color: #627279;
+  color: #3d4f5f;
 }
 
 .source {
@@ -361,7 +361,7 @@ export default {
 .desc {
   margin-top: 10px;
   font-size: 12px;
-  line-height: 16px;
+  line-height: 15px;
 }
 
 .pager {
