@@ -60,26 +60,24 @@
           </div>
         </div>
         <div class="keyboard {{ isDark ? 'keyboard-dark' : '' }}" if="{{ showKeyboard }}">
-          <!-- 九宫格数字键盘 -->
+          <!-- 数字键盘（3行4列） -->
           <div class="kb-container" if="{{ isNumberKeyboard }}">
             <div class="kb-row">
               <input class="kb-key" type="button" value="1" onclick="onKeyTap('1')" />
               <input class="kb-key" type="button" value="2" onclick="onKeyTap('2')" />
               <input class="kb-key" type="button" value="3" onclick="onKeyTap('3')" />
+              <input class="kb-key" type="button" value="4" onclick="onKeyTap('4')" />
             </div>
             <div class="kb-row">
-              <input class="kb-key" type="button" value="4" onclick="onKeyTap('4')" />
               <input class="kb-key" type="button" value="5" onclick="onKeyTap('5')" />
               <input class="kb-key" type="button" value="6" onclick="onKeyTap('6')" />
-            </div>
-            <div class="kb-row">
               <input class="kb-key" type="button" value="7" onclick="onKeyTap('7')" />
               <input class="kb-key" type="button" value="8" onclick="onKeyTap('8')" />
-              <input class="kb-key" type="button" value="9" onclick="onKeyTap('9')" />
             </div>
             <div class="kb-row">
-              <input class="kb-key" type="button" value="-" onclick="onKeyTap('-')" />
+              <input class="kb-key" type="button" value="9" onclick="onKeyTap('9')" />
               <input class="kb-key" type="button" value="0" onclick="onKeyTap('0')" />
+              <input class="kb-key-del" type="button" value="退格" onclick="onKeyTap('DEL')" />
               <input class="kb-key-switch" type="button" value="ABC" onclick="switchKeyboard" />
             </div>
           </div>
@@ -414,8 +412,8 @@ text {
 }
 
 .express-panel {
-  height: 155px;
-  margin-top: 8px;
+  height: 185px;
+  margin-top: 4px;
   padding: 10px;
   border-radius: 5px;
   flex-direction: column;
@@ -626,6 +624,7 @@ text {
   margin-top: 8px;
   border-radius: 5px;
   background-color: #eef2f4;
+  height: 145px;
 }
 
 .kb-container {
@@ -633,57 +632,69 @@ text {
 }
 
 .kb-row {
-  height: 26px;
-  margin-bottom: 4px;
+  height: 42px;
+  margin-bottom: 3px;
   flex-direction: row;
   justify-content: center;
   align-items: center;
 }
 
 .kb-key {
-  width: 28px;
-  height: 24px;
-  margin: 0 3px;
-  border-radius: 4px;
+  width: 68px;
+  height: 38px;
+  margin: 0 2px;
+  border-radius: 5px;
   background-color: #e8eef0;
   color: #172026;
-  font-size: 12px;
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.kb-key-del {
+  width: 68px;
+  height: 38px;
+  margin: 0 2px;
+  border-radius: 5px;
+  background-color: #d0d8dc;
+  color: #172026;
+  font-size: 14px;
   font-weight: bold;
   text-align: center;
 }
 
 .kb-key-wide {
-  width: 50px;
-  height: 24px;
-  margin: 0 3px;
-  border-radius: 4px;
+  width: 68px;
+  height: 38px;
+  margin: 0 2px;
+  border-radius: 5px;
   background-color: #d0d8dc;
   color: #172026;
-  font-size: 11px;
+  font-size: 14px;
   font-weight: bold;
   text-align: center;
 }
 
 .kb-key-ok {
-  width: 50px;
-  height: 24px;
-  margin: 0 3px;
-  border-radius: 4px;
+  width: 68px;
+  height: 38px;
+  margin: 0 2px;
+  border-radius: 5px;
   background-color: #0074ff;
   color: #ffffff;
-  font-size: 11px;
+  font-size: 14px;
   font-weight: bold;
   text-align: center;
 }
 
 .kb-key-switch {
-  width: 38px;
-  height: 24px;
-  margin: 0 3px;
-  border-radius: 4px;
+  width: 68px;
+  height: 38px;
+  margin: 0 2px;
+  border-radius: 5px;
   background-color: #0074ff;
   color: #ffffff;
-  font-size: 11px;
+  font-size: 14px;
   font-weight: bold;
   text-align: center;
 }
@@ -702,6 +713,11 @@ text {
 
 .keyboard-dark .kb-key {
   background-color: #2a2a2a;
+  color: #edf4f4;
+}
+
+.keyboard-dark .kb-key-del {
+  background-color: #333333;
   color: #edf4f4;
 }
 
