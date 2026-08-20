@@ -145,6 +145,7 @@ export default {
     modeLabel: "浅色",
     currentTime: "--:--",
     trackingNo: "",
+    phone: "",
     expressLoading: false,
     expressStateText: "",
     hasError: false,
@@ -240,16 +241,51 @@ export default {
     this.showKeyboard = false
     this.expressLoading = true
     this.expressStateText = "正在查询快递信息"
+    this.hasError = false
 
     var self = this
-    getExpress(trackingNo).then(function (info) {
+    var phone = this.phone ? this.phone.trim() : ""
+    getExpress(trackingNo, phone).then(function (info) {
       self.expressInfo = info
       self.expressLoading = false
       self.saveToList(trackingNo)
     }).catch(function (err) {
       self.expressLoading = false
-      self.hasError = true
-      self.errorText = "快递查询失败"
+      var errMsg = err.message || ""
+      // 检测是否需要手机号
+      if (errMsg.indexOf("phone") !== -1 || errMsg.indexOf("手机") !== -1) {
+        self.promptPhone(trackingNo)
+      } else {
+        self.hasError = true
+        self.errorText = "快递查询失败"
+      }
+    })
+  },
+
+  promptPhone(trackingNo) {
+    var self = this
+    prompt.showDialog({
+      title: "需要手机号",
+      message: "顺丰等快递公司需要收件人手机号尾号才能查询",
+      buttons: [
+        { text: "取消", color: "#999999" },
+        { text: "确定", color: "#0074ff" }
+      ],
+      success: function (data) {
+        if (data.index === 1) {
+          // 用户点击确定，弹出输入框
+          prompt.showKeyboard({
+            type: "number",
+            placeholder: "请输入手机号后4位",
+            success: function (res) {
+              if (res.text) {
+                self.phone = res.text
+                self.queryExpress()
+              }
+            }
+          })
+        }
+      }
     })
   },
 

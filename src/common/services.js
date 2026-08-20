@@ -478,8 +478,10 @@ export function getTodayInHistory() {
 
 /**
  * 获取快递信息（Promise 写法）
+ * @param {string} trackingNo - 运单号
+ * @param {string} phone - 收件人手机号尾号（顺丰等快递公司需要）
  */
-export function getExpress(trackingNo) {
+export function getExpress(trackingNo, phone) {
   var provider = PROVIDERS.express
   if (!trackingNo) {
     return Promise.resolve({
@@ -490,9 +492,14 @@ export function getExpress(trackingNo) {
     })
   }
 
-  var query = encodeQuery({
+  var params = {
     tracking_number: trackingNo
-  })
+  }
+  if (phone) {
+    params.phone = phone
+  }
+
+  var query = encodeQuery(params)
 
   return request({
     url: provider.url + "?" + query
@@ -515,6 +522,9 @@ export function getExpress(trackingNo) {
           }
         })
       }
+    } else if (data && data.message) {
+      // API返回错误信息，抛出异常让调用方处理
+      throw new Error(data.message)
     } else {
       return {
         ready: false,
@@ -525,6 +535,9 @@ export function getExpress(trackingNo) {
       }
     }
   }).catch(function (err) {
+    if (err.message) {
+      throw err
+    }
     return {
       ready: false,
       title: trackingNo,
