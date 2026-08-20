@@ -20,6 +20,9 @@
           <div class="express-input {{ isDark ? 'input-dark' : 'input-light' }}" onclick="toggleKeyboard">
             <text class="{{ trackingNo ? 'express-input-text' : 'express-input-placeholder' }}">{{ trackingNo || '请输入快递运单号' }}</text>
           </div>
+          <div class="express-phone-input {{ isDark ? 'input-dark' : 'input-light' }}" if="{{ showPhoneInput }}" onclick="togglePhoneKeyboard">
+            <text class="{{ phone ? 'express-input-text' : 'express-input-placeholder' }}">{{ phone || '手机号后4位' }}</text>
+          </div>
           <input class="express-query-btn" type="button" value="查询" onclick="queryExpress" />
         </div>
         <div class="express-loading" if="{{ expressLoading }}">
@@ -146,6 +149,7 @@ export default {
     currentTime: "--:--",
     trackingNo: "",
     phone: "",
+    showPhoneInput: false,
     expressLoading: false,
     expressStateText: "",
     hasError: false,
@@ -208,21 +212,46 @@ export default {
     this.showKeyboard = !this.showKeyboard
   },
 
+  togglePhoneKeyboard() {
+    // 手机号输入复用同一个键盘
+    this.showKeyboard = !this.showKeyboard
+  },
+
   switchKeyboard() {
     this.isNumberKeyboard = !this.isNumberKeyboard
   },
 
   onKeyTap(key) {
+    // 判断当前输入目标（通过焦点判断，简化处理：如果手机号输入框显示且键盘打开，则输入到手机号）
+    var isPhoneInput = this.showPhoneInput && this.showKeyboard
+
     if (key === "DEL") {
-      if (this.trackingNo.length > 0) {
-        this.trackingNo = this.trackingNo.substring(0, this.trackingNo.length - 1)
+      if (isPhoneInput) {
+        if (this.phone.length > 0) {
+          this.phone = this.phone.substring(0, this.phone.length - 1)
+        }
+      } else {
+        if (this.trackingNo.length > 0) {
+          this.trackingNo = this.trackingNo.substring(0, this.trackingNo.length - 1)
+        }
       }
     } else if (key === "CLR") {
-      this.trackingNo = ""
+      if (isPhoneInput) {
+        this.phone = ""
+      } else {
+        this.trackingNo = ""
+      }
     } else if (key === "OK") {
       this.showKeyboard = false
     } else {
-      this.trackingNo += key
+      // 手机号只允许输入数字，且最多4位
+      if (isPhoneInput) {
+        if (/^\d$/.test(key) && this.phone.length < 4) {
+          this.phone += key
+        }
+      } else {
+        this.trackingNo += key
+      }
     }
   },
 
@@ -248,45 +277,30 @@ export default {
     getExpress(trackingNo, phone).then(function (info) {
       self.expressInfo = info
       self.expressLoading = false
+      self.showPhoneInput = false
       self.saveToList(trackingNo)
     }).catch(function (err) {
       self.expressLoading = false
       var errMsg = err.message || ""
-      // 检测是否需要手机号
-      if (errMsg.indexOf("phone") !== -1 || errMsg.indexOf("手机") !== -1) {
+      // 检测是否需要手机号（顺丰等快递公司）
+      var needPhone = errMsg.indexOf("phone") !== -1 || errMsg.indexOf("手机") !== -1 ||
+                      errMsg.indexOf("INVALID_PARAMETER") !== -1
+      // 如果是顺丰单号（SF开头）且没有输入手机号，也显示手机号输入框
+      var isSF = trackingNo.toUpperCase().indexOf("SF") === 0
+      if (needPhone || (isSF && !phone)) {
         self.promptPhone(trackingNo)
       } else {
         self.hasError = true
-        self.errorText = "快递查询失败"
+        self.errorText = errMsg || "快递查询失败"
       }
     })
   },
 
   promptPhone(trackingNo) {
-    var self = this
-    prompt.showDialog({
-      title: "需要手机号",
-      message: "顺丰等快递公司需要收件人手机号尾号才能查询",
-      buttons: [
-        { text: "取消", color: "#999999" },
-        { text: "确定", color: "#0074ff" }
-      ],
-      success: function (data) {
-        if (data.index === 1) {
-          // 用户点击确定，弹出输入框
-          prompt.showKeyboard({
-            type: "number",
-            placeholder: "请输入手机号后4位",
-            success: function (res) {
-              if (res.text) {
-                self.phone = res.text
-                self.queryExpress()
-              }
-            }
-          })
-        }
-      }
-    })
+    // 显示手机号输入框
+    this.showPhoneInput = true
+    this.hasError = false
+    this.errorText = ""
   },
 
   loadSavedList() {
@@ -462,9 +476,18 @@ text {
 }
 
 .express-input {
-  width: 240px;
+  width: 180px;
   height: 28px;
   padding: 0 8px;
+  border-radius: 4px;
+  justify-content: center;
+}
+
+.express-phone-input {
+  width: 100px;
+  height: 28px;
+  padding: 0 8px;
+  margin-left: 6px;
   border-radius: 4px;
   justify-content: center;
 }
